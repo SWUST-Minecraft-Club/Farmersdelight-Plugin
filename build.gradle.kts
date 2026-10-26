@@ -119,8 +119,11 @@ dependencies {
         testImplementation("net.momirealms:craft-engine-core:$ceVersion")
         testImplementation("net.momirealms:craft-engine-bukkit-proxy:$ceVersion")
     }
-    // Keep the test serializer modules aligned with the API supplied by the local CE libraries.
-    testImplementation(platform("net.kyori:adventure-bom:5.2.0"))
+    // Adventure 5.x removes legacy types still used by the Paper 1.21.5 API.
+    // Align the Folia 26.3 tests with 5.x while letting Paper retain its own BOM.
+    if (foliaVersion.isPresent) {
+        testImplementation(platform("net.kyori:adventure-bom:5.2.0"))
+    }
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
     testImplementation("io.netty:netty-transport:4.1.135.Final")
     // CE Player exposes authlib types that Paper supplies only at server runtime.
