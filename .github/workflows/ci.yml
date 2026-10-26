@@ -1,67 +1,226 @@
-name: CI
+name: Build and release
 
 on:
   push:
+    branches: ['**']
+    tags: ['v*']
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
+
+env:
+  FOLIA_VERSION: 26.3.build.5-alpha
+  CRAFTENGINE_VERSION: 26.9.2-folia26.3.1
+  # Pin the fork containing the Folia persistence fixes; update together with CRAFTENGINE_VERSION.
+  CRAFTENGINE_REF: 3e2f805519f26423bf4a269c559d0d6f7df1d510
+  WIKI_REF: 2d70070f7d4d633159298999b40ccb3cad078923
 
 jobs:
   test:
-    name: Build & test
+    name: Paper 1.21.5 / debug tools ${{ matrix.debug-tools }}
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     strategy:
+      fail-fast: false
       matrix:
         debug-tools: [false, true]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
       # ApiDocsDriftTest compares the addon-facing api documentation, which lives in the wiki repository,
       # against the code. The wiki checkout is what lets that test run; it fails rather than skips when the
       # documentation is missing.
       - name: Checkout the wiki (api documentation)
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: IOVEYOUMC0/FarmersdelightPluginWiKi
+          ref: ${{ env.WIKI_REF }}
           path: wiki
+          persist-credentials: false
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
         with:
           distribution: temurin
           java-version: '21'
           cache: gradle
 
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
-
       - name: Build and run all JUnit tests
-        run: ./gradlew clean build -PdebugTools=${{ matrix.debug-tools }} --no-daemon --stacktrace
+        env:
+          DEBUG_TOOLS: ${{ matrix.debug-tools }}
+        run: >-
+          ./gradlew clean build -PdebugTools="$DEBUG_TOOLS"
+          --no-daemon --stacktrace --console=plain --max-workers=2
+          -Dorg.gradle.jvmargs=-Xmx3G
 
       - name: Require zero failing, errored or skipped tests
         run: python3 tools/check_test_results.py .
 
       - name: Upload test report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: test-results-debug-${{ matrix.debug-tools }}
-          path: build/reports/tests/test/
+          name: test-results-paper-debug-${{ matrix.debug-tools }}
+          path: |
+            build/reports/tests/test/
+            build/test-results/test/
           if-no-files-found: ignore
+
+  folia:
+    name: Folia 26.3 / fixed CraftEngine
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Read version and validate release tag
+        id: version
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+          version = re.search(r'^version = "([^"]+)"', Path('build.gradle.kts').read_text(), re.MULTILINE).group(1)
+          if os.environ['GITHUB_REF_TYPE'] == 'tag' and os.environ['GITHUB_REF_NAME'] != f'v{version}':
+              raise SystemExit(f'Release tag must be v{version}')
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f'version={version}\n')
+          PY
+
+      - name: Checkout the wiki (API documentation)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: IOVEYOUMC0/FarmersdelightPluginWiKi
+          ref: ${{ env.WIKI_REF }}
+          path: wiki
+          persist-credentials: false
+
+      - name: Checkout fixed CraftEngine sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: SWUST-Minecraft-Club/craft-engine
+          ref: ${{ env.CRAFTENGINE_REF }}
+          path: .ci-deps/craft-engine
+          persist-credentials: false
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+          cache-dependency-path: |
+            **/*.gradle.kts
+            **/gradle-wrapper.properties
+            .ci-deps/craft-engine/gradle/libs.versions.toml
+
+      - name: Build CraftEngine and its relocated Adventure dependency
+        working-directory: .ci-deps/craft-engine
+        run: |
+          git config user.name 'github-actions[bot]'
+          ./gradlew :bukkit:paper-loader:shadowJar :core:adventure:shadowJar \
+            --no-daemon --stacktrace --console=plain --max-workers=2 \
+            -Dorg.gradle.jvmargs=-Xmx3G
+
+      - name: Build and test against Folia 26.3
+        run: |
+          ./gradlew clean build -PdebugTools=false -PfoliaVersion="$FOLIA_VERSION" \
+            -PceJar="$GITHUB_WORKSPACE/.ci-deps/craft-engine/target/craft-engine-paper-plugin-${CRAFTENGINE_VERSION}.jar" \
+            -PceLibraries="$GITHUB_WORKSPACE/.ci-deps/craft-engine/core/adventure/build/libs" \
+            --no-daemon --stacktrace --console=plain --max-workers=2 \
+            -Dorg.gradle.jvmargs=-Xmx3G
+
+      - name: Require zero failing, errored or skipped tests
+        run: python3 tools/check_test_results.py .
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: test-results-folia
+          path: |
+            build/reports/tests/test/
+            build/test-results/test/
+          if-no-files-found: ignore
+
+      - name: Prepare release assets
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          mkdir -p dist
+          cp "build/libs/farmersdelight-${VERSION}.jar" dist/
+          cp docs/RELEASING.md dist/RELEASING.md
+          cd dist
+          sha256sum ./*.jar > SHA256SUMS.txt
+
+      - name: Upload release assets
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: release-assets
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
 
   lint:
     name: Repo contract checks
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: '3.12'
 
       - name: Install checker dependencies
-        run: python -m pip install --quiet pyyaml
+        run: python -m pip install --quiet pyyaml==6.0.2
 
       - name: Run every repository contract and checker self-test
         run: python tools/run_all_checks.py --quiet
+
+  release:
+    name: Publish GitHub Release
+    if: github.event_name == 'push' && github.ref_type == 'tag'
+    needs: [test, folia, lint]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download tested release assets
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: release-assets
+          path: dist
+
+      - name: Publish or update release assets
+        working-directory: dist
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          sha256sum --check SHA256SUMS.txt
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" ./*.jar SHA256SUMS.txt RELEASING.md --clobber
+          else
+            gh release create "$TAG" ./*.jar SHA256SUMS.txt RELEASING.md \
+              --verify-tag --title "FarmersDelight $TAG" --generate-notes \
+              --notes 'Folia 26.3 适配版：修复正常关服重启后容器数据丢失、区块保存与野生作物生成。请配套安装 CraftEngine 26.9.2-folia26.3.1 的 Paper 插件版本。修复及构建说明见附件 RELEASING.md。'
+          fi

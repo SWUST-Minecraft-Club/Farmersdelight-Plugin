@@ -60,6 +60,10 @@ public final class StoveBlockEntityController extends BlockEntityController {
         }
     }
 
+    public void prepareForShutdown() {
+        if (this.pendingLoadData == null && this.pendingSaveData == null) passivate();
+    }
+
     public boolean passivate() {
         StoveManager manager = getManager();
         World world = getBukkitWorld();

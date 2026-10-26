@@ -116,6 +116,12 @@ public final class CookingPotBlockEntityController extends BlockEntityController
         }
     }
 
+    public void prepareForShutdown() {
+        if (this.pendingLoadData != null || this.pendingSaveData != null) return;
+        CookingPotBlockEntity entity = getEntityIfLoaded();
+        if (entity != null) passivate(entity);
+    }
+
     public static CompoundTag saveData(CookingPotBlockEntity entity) {
         CompoundTag data = new CompoundTag();
         data.putInt(DATA_VERSION, VersionHelper.WORLD_VERSION);

@@ -6,10 +6,17 @@ import com.huidu.farmersdelight.i18n.I18n;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.error.YAMLException;
+import org.yaml.snakeyaml.nodes.MappingNode;
+import org.yaml.snakeyaml.nodes.Node;
+import org.yaml.snakeyaml.nodes.ScalarNode;
+import org.yaml.snakeyaml.nodes.SequenceNode;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -75,7 +82,66 @@ public final class ResourceInstaller {
     private int migrateKnownResourceFixes(Path targetRoot) throws IOException {
         int changed = migrateItemsEggTag(targetRoot.resolve("configuration").resolve("items.yml"));
         changed += migrateAnimatedGuiItem(targetRoot.resolve("configuration").resolve("gui.yml"));
+        changed += migrateWildPlantStates(targetRoot.resolve("configuration").resolve("wild_plants.yml"));
         return changed;
+    }
+
+    /** Free the three sugar-cane slots needed by CE's bundled plants without replacing user models. */
+    static int migrateWildPlantStates(Path wildPlants) throws IOException {
+        if (!Files.isRegularFile(wildPlants)) {
+            return 0;
+        }
+        try {
+            String original = Files.readString(wildPlants);
+            Node blocks = mappingValue(new Yaml().compose(new StringReader(original)), "blocks");
+            List<ScalarNode> replacements = new ArrayList<>();
+            for (String plant : List.of("wild_cabbages", "wild_onions", "wild_tomatoes")) {
+                Node owner = mappingValue(blocks, "farmersdelight:" + plant);
+                Node state = mappingValue(owner, "state");
+                Node autoState = mappingValue(state, "auto_state");
+                // Anchored nodes can be shared with unrelated blocks; leave those custom allocations alone.
+                if (owner == null || owner.getAnchor() != null || state == null || state.getAnchor() != null
+                        || !(autoState instanceof ScalarNode scalar) || scalar.getAnchor() != null
+                        || !"sugar_cane".equals(scalar.getValue())) {
+                    continue;
+                }
+                Node models = mappingValue(state, "models");
+                if (!(models instanceof SequenceNode sequence) || sequence.getValue().size() != 1
+                        || !(mappingValue(sequence.getValue().getFirst(), "path") instanceof ScalarNode model)
+                        || !("farmersdelight:block/" + plant).equals(model.getValue())) {
+                    continue;
+                }
+                replacements.add(scalar);
+            }
+            if (replacements.isEmpty()) {
+                return 0;
+            }
+            // Patch scalar spans instead of round-tripping through Bukkit YAML: its path separator splits
+            // CE keys such as $$>=26.3, and its YAML 1.1 resolver changes event keys such as "on".
+            replacements.sort(Comparator.comparingInt((ScalarNode node) -> node.getStartMark().getIndex()).reversed());
+            StringBuilder migrated = new StringBuilder(original);
+            for (ScalarNode node : replacements) {
+                int start = original.offsetByCodePoints(0, node.getStartMark().getIndex());
+                int end = original.offsetByCodePoints(0, node.getEndMark().getIndex());
+                migrated.replace(start, end, "higher_tripwire");
+            }
+            ConfigFileUpdater.backup(wildPlants);
+            ConfigFileUpdater.writeStringAtomically(wildPlants, migrated.toString(), true);
+            return 1;
+        } catch (YAMLException e) {
+            throw new IOException("CraftEngine wild_plants.yml is not valid YAML", e);
+        }
+    }
+
+    private static Node mappingValue(Node node, String key) {
+        if (node instanceof MappingNode mapping) {
+            for (var tuple : mapping.getValue()) {
+                if (tuple.getKeyNode() instanceof ScalarNode scalar && key.equals(scalar.getValue())) {
+                    return tuple.getValueNode();
+                }
+            }
+        }
+        return null;
     }
 
     private int migrateItemsEggTag(Path items) throws IOException {

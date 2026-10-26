@@ -90,6 +90,10 @@ public final class SkilletBlockEntityController extends BlockEntityController im
         }
     }
 
+    public void prepareForShutdown() {
+        if (this.pendingLoadData == null && this.pendingSaveData == null) passivate();
+    }
+
     public boolean passivate() {
         SkilletManager manager = getManager();
         World world = getBukkitWorld();

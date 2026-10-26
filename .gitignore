@@ -1,6 +1,8 @@
 
 .gradle/
 .gradle-user-home/
+.ci-deps/
+dist/
 build/
 bin/
 out/

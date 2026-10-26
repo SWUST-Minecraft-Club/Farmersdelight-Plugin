@@ -450,6 +450,9 @@ public class FarmersDelightPlugin extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
+        if (getServer().isStopping()) {
+            prepareBlockDataForShutdown();
+        }
         enabled = false;
         boolean folia = scheduler != null && scheduler.isFolia();
 
@@ -527,7 +530,7 @@ public class FarmersDelightPlugin extends JavaPlugin implements Listener {
             // are no longer cancelled and items can be duped.
             RecipeBookListener.reset();
         });
-        runBudgetedDisableStep("plugin.disable_step_save_block_data", this::saveAllBlockData);
+        runDisableStep("plugin.disable_step_save_block_data", this::saveAllBlockData);
 
         runDisableStep("plugin.disable_step_clear_placement_cache", this::cleanupPlacementCache);
         runDisableStep("plugin.disable_step_clear_interaction_debounce_cache", this::cleanupInteractionDebouncer);
@@ -668,6 +671,14 @@ public class FarmersDelightPlugin extends JavaPlugin implements Listener {
     // has no retry. Each failure is logged with its own step name; the sequence itself never throws.
     private void saveAllBlockData() {
         WorldDataPersistence.saveAllBlockData(this);
+    }
+
+    private boolean blockDataPreparedForShutdown;
+
+    public void prepareBlockDataForShutdown() {
+        if (blockDataPreparedForShutdown || !getServer().isStopping()) return;
+        blockDataPreparedForShutdown = true;
+        runDisableStep("plugin.disable_step_save_block_data", () -> WorldDataPersistence.prepareShutdown(this));
     }
 
     // ignoreCancelled: WorldUnloadEvent is cancellable, and this handler passivates + drops skillet/stove

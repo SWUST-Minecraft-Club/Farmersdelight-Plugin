@@ -4,9 +4,16 @@ import com.huidu.farmersdelight.block.behavior.CookingPotBlockBehavior;
 import com.huidu.farmersdelight.block.behavior.CuttingBoardBlockBehavior;
 import com.huidu.farmersdelight.block.behavior.SkilletBlockBehavior;
 import com.huidu.farmersdelight.block.behavior.StoveCookingBlockBehavior;
+import com.huidu.farmersdelight.block.behavior.CookingPotBlockEntityController;
+import com.huidu.farmersdelight.block.behavior.CuttingBoardBlockEntityController;
+import com.huidu.farmersdelight.block.behavior.SkilletBlockEntityController;
+import com.huidu.farmersdelight.block.behavior.StoveBlockEntityController;
 import com.huidu.farmersdelight.util.BlockPosKey;
 import com.huidu.farmersdelight.util.CustomBlockUtils;
 import net.momirealms.craftengine.core.world.CEWorld;
+import net.momirealms.craftengine.core.block.entity.BlockEntity;
+import net.momirealms.craftengine.core.world.chunk.CEChunk;
+import org.bukkit.Chunk;
 import org.bukkit.World;
 
 /**
@@ -16,6 +23,27 @@ import org.bukkit.World;
 final class WorldDataPersistence {
 
     private WorldDataPersistence() {
+    }
+
+    /** Called after region ticks stop, before CraftEngine closes storage or FD clears its managers. */
+    static void prepareShutdown(FarmersDelightPlugin plugin) {
+        for (World world : plugin.getServer().getWorlds()) {
+            CEWorld ceWorld = CustomBlockUtils.getCEWorld(world);
+            if (ceWorld == null) continue;
+            for (Chunk chunk : world.getLoadedChunks()) {
+                CEChunk ceChunk = ceWorld.getChunkAtIfLoaded(chunk.getX(), chunk.getZ());
+                if (ceChunk == null) continue;
+                for (BlockEntity entity : ceChunk.blockEntities()) {
+                    plugin.runDisableStep("plugin.disable_step_save_block_data", () -> {
+                        entity.controller.let(CookingPotBlockEntityController.class, CookingPotBlockEntityController::prepareForShutdown);
+                        entity.controller.let(CuttingBoardBlockEntityController.class, CuttingBoardBlockEntityController::prepareForShutdown);
+                        entity.controller.let(SkilletBlockEntityController.class, SkilletBlockEntityController::prepareForShutdown);
+                        entity.controller.let(StoveBlockEntityController.class, StoveBlockEntityController::prepareForShutdown);
+                    });
+                }
+            }
+        }
+        flushCraftEngineWorldData(plugin);
     }
 
     /**
@@ -42,10 +70,10 @@ final class WorldDataPersistence {
             return;
         }
         for (BlockPosKey posKey : CookingPotBlockBehavior.getAllBlockEntities(world).keySet()) {
-            CookingPotBlockBehavior.saveBlockEntityData(world, posKey);
+            CookingPotBlockBehavior.passivateBlockEntityData(world, posKey);
         }
         for (BlockPosKey posKey : CuttingBoardBlockBehavior.getAllBlockEntities(world).keySet()) {
-            CuttingBoardBlockBehavior.saveBlockEntityData(world, posKey);
+            CuttingBoardBlockBehavior.passivateBlockEntityData(world, posKey);
         }
         if (plugin.getSkilletManager() != null) {
             plugin.getSkilletManager().saveWorldData(world);
@@ -56,9 +84,8 @@ final class WorldDataPersistence {
     }
 
     private static void flushCraftEngineWorldData(FarmersDelightPlugin plugin) {
-        // CraftEngine loads after this plugin, so at shutdown it is disabled first and its classloader is
-        // closed by the time this runs. It has already saved its own world data on the way down; touching
-        // its classes here would throw NoClassDefFoundError. Flush only when it is still enabled.
+        // The pre-shutdown event prepares snapshots before CE closes its world storage. A later
+        // disable callback may run after CE is disabled; only flush while its storage is available.
         if (!plugin.getServer().getPluginManager().isPluginEnabled("CraftEngine")) {
             return;
         }
@@ -68,6 +95,11 @@ final class WorldDataPersistence {
                 if (ceWorld != null) {
                     ceWorld.saveChunks();
                     ceWorld.saveSettings();
+                    try {
+                        ceWorld.worldDataStorage().flush();
+                    } catch (java.io.IOException failure) {
+                        throw new java.io.UncheckedIOException(failure);
+                    }
                 }
             }, "world", world.getName());
         }

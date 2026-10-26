@@ -6,6 +6,7 @@ import com.huidu.farmersdelight.util.ItemUtils;
 import com.huidu.farmersdelight.util.scheduler.PluginTask;
 import io.papermc.paper.event.server.ServerResourcesReloadedEvent;
 import net.momirealms.craftengine.bukkit.util.KeyUtils;
+import net.momirealms.craftengine.bukkit.api.event.ServerPreShutdownEvent;
 import net.momirealms.craftengine.core.item.recipe.RecipeType;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
@@ -24,6 +25,11 @@ public final class CraftEngineWatchdogListener implements Listener {
 
     public CraftEngineWatchdogListener(FarmersDelightPlugin plugin) {
         this.plugin = plugin;
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onPreShutdown(ServerPreShutdownEvent event) {
+        plugin.prepareBlockDataForShutdown();
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

@@ -12,7 +12,7 @@ plugins {
 }
 
 group = "com.huidu.farmersdelight"
-version = "1.0.3"
+version = "1.0.3-folia26.3.1"
 
 repositories {
     mavenCentral()
@@ -73,8 +73,13 @@ val extractCraftEngineProxy = tasks.register("extractCraftEngineProxy") {
     }
 }
 
+// Use -PfoliaVersion=26.3.build.5-alpha for the target-server compatibility build.
+val foliaVersion = providers.gradleProperty("foliaVersion")
+val serverApi = foliaVersion.map { "dev.folia:folia-api:$it" }
+    .getOrElse("io.papermc.paper:paper-api:1.21.5-R0.1-SNAPSHOT")
+
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.5-R0.1-SNAPSHOT")
+    compileOnly(serverApi)
     compileOnly("org.jetbrains:annotations:26.1.0")
     // Already provided by Paper; only the transport API is needed for per-player display packets.
     compileOnly("io.netty:netty-transport:4.1.135.Final")
@@ -102,7 +107,7 @@ dependencies {
     implementation("org.bstats:bstats-bukkit:3.1.0")
     // UltimateAdvancementAPI: separate server plugin; vendored only for offline compile against its API.
     compileOnly(files("libs/UltimateAdvancementAPI-Plugin-2.8.0-folia.jar"))
-    testImplementation("io.papermc.paper:paper-api:1.21.5-R0.1-SNAPSHOT")
+    testImplementation(serverApi)
     if (ceJar.isPresent) {
         testImplementation(files(ceJar.get()))
         testImplementation(files(ceLocalProxy).builtBy(extractCraftEngineProxy))
@@ -114,6 +119,8 @@ dependencies {
         testImplementation("net.momirealms:craft-engine-core:$ceVersion")
         testImplementation("net.momirealms:craft-engine-bukkit-proxy:$ceVersion")
     }
+    // Keep the test serializer modules aligned with the API supplied by the local CE libraries.
+    testImplementation(platform("net.kyori:adventure-bom:5.2.0"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
     testImplementation("io.netty:netty-transport:4.1.135.Final")
     // CE Player exposes authlib types that Paper supplies only at server runtime.
@@ -138,8 +145,10 @@ val pluginArchiveBaseName = "farmersdelight"
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(JavaLanguageVersion.of(if (foliaVersion.isPresent) 25 else 21))
     }
+    // 26.3 API classes require a Java 25 compiler even when our plugin bytecode stays on 21.
+    if (foliaVersion.isPresent) disableAutoTargetJvm()
 }
 
 tasks.withType<JavaCompile>().configureEach {
@@ -174,6 +183,7 @@ tasks.test {
 }
 
 tasks.processResources {
+    inputs.property("pluginVersion", project.version.toString())
     filteringCharset = "UTF-8"
     filesMatching("paper-plugin.yml") {
         expand("version" to version)

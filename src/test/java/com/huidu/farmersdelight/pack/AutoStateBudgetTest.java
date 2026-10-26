@@ -2,10 +2,13 @@ package com.huidu.farmersdelight.pack;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import com.huidu.farmersdelight.api.config.ConfigFileUpdater;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.HashSet;
@@ -44,7 +47,7 @@ class AutoStateBudgetTest {
             Map.entry("weeping_vines", 52),
             Map.entry("cave_vines", 52),
             Map.entry("kelp", 26),
-            Map.entry("sugar_cane", 16),
+            Map.entry("sugar_cane", 15),
             Map.entry("cactus", 16),
             Map.entry("sapling", 16),
             Map.entry("chorus", 64),
@@ -95,6 +98,12 @@ class AutoStateBudgetTest {
                     "group " + entry.getKey() + " is asked for " + entry.getValue().size()
                             + " allocations but owns " + capacity + ": " + entry.getValue());
         }
+        // CE's default_assets also allocate seven of the fifteen mapped sugar-cane states.
+        assertTrue(requests.getOrDefault("sugar_cane", List.of()).size() <= 15 - 7,
+                "leave room for CE default_assets: " + requests.get("sugar_cane"));
+        assertTrue(requests.getOrDefault("higher_tripwire", List.of()).stream()
+                        .anyMatch(key -> key.contains("farmersdelight:wild_cabbages")),
+                "the budget must include wild plants, not just food blocks");
     }
 
     @Test
@@ -145,11 +154,25 @@ class AutoStateBudgetTest {
      */
     private static Map<String, List<String>> allocationKeys(boolean plainAsAppearances) {
         Map<String, List<String>> requests = new LinkedHashMap<>();
-        ConfigurationSection food = pack("food_block.yml");
-        ConfigurationSection templates = food.getConfigurationSection("templates");
-        collect(templates, templates, requests, plainAsAppearances);
-        collect(food.getConfigurationSection("blocks"), templates, requests, plainAsAppearances);
-        collect(pack("blocks.yml").getConfigurationSection("block"), null, requests, plainAsAppearances);
+        List<ConfigurationSection> configurations = new ArrayList<>();
+        ConfigurationSection templates = new YamlConfiguration();
+        try {
+            Path root = Path.of(AutoStateBudgetTest.class.getResource("/craftengine/farmersdelight/configuration").toURI());
+            try (var files = Files.list(root)) {
+                for (Path file : files.filter(path -> path.toString().endsWith(".yml")).sorted().toList()) {
+                    ConfigurationSection config = pack(file.getFileName().toString());
+                    configurations.add(config);
+                    ConfigurationSection section = config.getConfigurationSection("templates");
+                    if (section != null) ConfigFileUpdater.copySection(section, templates);
+                }
+            }
+        } catch (Exception error) {
+            throw new AssertionError("cannot enumerate bundled block configurations", error);
+        }
+        for (ConfigurationSection config : configurations) {
+            collect(config.getConfigurationSection("blocks"), templates, requests, plainAsAppearances);
+            collect(config.getConfigurationSection("block"), templates, requests, plainAsAppearances);
+        }
         return requests;
     }
 
@@ -160,9 +183,15 @@ class AutoStateBudgetTest {
         }
         for (String owner : owners.getKeys(false)) {
             List<Map.Entry<String, ConfigurationSection>> appearances = new ArrayList<>();
+            ConfigurationSection state = owners.getConfigurationSection(owner + ".state");
+            if (state != null) appearances.add(new AbstractMap.SimpleEntry<>("state", state));
             addAppearances(appearances, owners.getConfigurationSection(owner + ".states.appearances"));
             if (templates != null) {
-                for (String template : owners.getStringList(owner + ".template")) {
+                List<String> inherited = owners.isString(owner + ".template")
+                        ? List.of(owners.getString(owner + ".template")) : owners.getStringList(owner + ".template");
+                for (String template : inherited) {
+                    ConfigurationSection inheritedState = templates.getConfigurationSection(template + ".state");
+                    if (inheritedState != null) appearances.add(new AbstractMap.SimpleEntry<>("state", inheritedState));
                     addAppearances(appearances, templates.getConfigurationSection(template + ".states.appearances"));
                 }
             }

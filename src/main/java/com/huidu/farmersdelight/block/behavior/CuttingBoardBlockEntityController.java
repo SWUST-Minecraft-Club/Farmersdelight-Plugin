@@ -95,6 +95,14 @@ public final class CuttingBoardBlockEntityController extends BlockEntityControll
         }
     }
 
+    public void prepareForShutdown() {
+        if (this.pendingLoadData != null || this.pendingSaveData != null) return;
+        World world = getBukkitWorld();
+        if (world == null) return;
+        CuttingBoardBlockEntity entity = CuttingBoardBlockBehavior.getBlockEntity(world, new BlockPosKey(this.blockEntity.pos));
+        if (entity != null) passivate(entity);
+    }
+
     private CompoundTag buildSaveData() {
         if (this.item == null || this.item.isEmpty()) return null;
 
