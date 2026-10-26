@@ -28,7 +28,7 @@ CI 固定文档提交，避免外部文档更新改变同一 tag 的构建结果
 
 Folia 26.3 发布构建使用 JDK 25，插件字节码仍以 Java 21 为目标：
 
-1. 检出 `.github/workflows/ci.yml` 的 `CRAFTENGINE_REF` 指定的 CraftEngine 提交。
+1. 检出 `.github/workflows/build-release.yml` 的 `CRAFTENGINE_REF` 指定的 CraftEngine 提交。
 2. 在 CraftEngine 中构建 `:bukkit:paper-loader:shadowJar :core:adventure:shadowJar`。
 3. 回到本仓库执行（将路径替换为实际检出目录）：
 
@@ -44,7 +44,7 @@ Folia 26.3 发布构建使用 JDK 25，插件字节码仍以 Java 21 为目标�
 
 ## tag 自动发布
 
-`.github/workflows/ci.yml` 包含两种 debug-tools 配置的常规构建、Folia 26.3 构建、JUnit 测试与仓库契约检查。
+`.github/workflows/build-release.yml` 包含两种 debug-tools 配置的常规构建、Folia 26.3 构建、JUnit 测试与仓库契约检查。
 所有检查通过后，推送 `v*` tag 会发布 GitHub Release，上传 Folia 插件、`SHA256SUMS.txt` 和本文。
 tag 必须精确匹配 `build.gradle.kts` 中的版本：
 
