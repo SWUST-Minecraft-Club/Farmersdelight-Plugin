@@ -41,6 +41,8 @@ class ReflectionBudgetTest {
     private static final Map<String, Integer> MAIN_BUDGET = Map.ofEntries(
             // Optional plugins and the WorldEdit/WorldGuard API, none of which is on the compile classpath.
             Map.entry("com/huidu/farmersdelight/util/compat/WorldGuardCompat.java", 21),
+            // Optional claim APIs, cached per protection-plugin lifecycle; never a player/OP bypass check.
+            Map.entry("com/huidu/farmersdelight/worldgen/RetroGenerationProtection.java", 21),
             Map.entry("com/huidu/farmersdelight/compat/AuraSkillsHook.java", 14),
             // NMS and the CraftEngine proxy: present at runtime, absent from the compile classpath.
             Map.entry("com/huidu/farmersdelight/api/util/DatapackSupport.java", 5),

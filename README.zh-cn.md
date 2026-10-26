@@ -39,6 +39,13 @@ Expanded Delight 仍在移植，不属于已发布附属。
 
 先安装 CraftEngine，再将 FarmersDelight 放入 `plugins/`。修改插件配置后使用 `/fd reload`，修改 CraftEngine 资源后使用 `/ce reload`。
 
+## 已有存档的植物生成
+
+新区块由 CraftEngine 按群系和概率自然生成；资源包加载日志不代表旧区块已补种。
+`1.0.3-folia26.3.2` 提供默认关闭的**一次性旧区块补生成**：只在自然土壤上填空气，每区块最多补一轮，
+重启或采集后不会再次补种。设置和 `/fd retrogen status`、`/fd retrogen preview` 命令见
+[旧区块补生成说明](docs/RETRO_GENERATION.md)。
+
 ## 文档
 
 完整的玩家指南、服主指南、附属指南和 API 文档已迁移到 [FarmersdelightPluginWiKi](https://github.com/IOVEYOUMC0/FarmersdelightPluginWiKi)，该仓库可以通过 GitHub 集成连接到 GitBook。

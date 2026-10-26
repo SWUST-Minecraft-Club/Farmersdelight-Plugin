@@ -78,6 +78,12 @@ compat:
       other_ingredients: "<red>The pot holds ingredients this recipe did not record."
       invalid_recipe: "<red>This recipe item has no usable ingredient recording."
 console:
+  retrogen:
+    started: "Old-chunk backfill enabled: worlds {worlds}, {rules} terrestrial plants; AIR only, once per chunk."
+    no_rules: "Old-chunk backfill has no eligible terrestrial plant rules; check the CraftEngine farm configs."
+    failed: "Skipped an old-chunk backfill operation: {error}"
+    protection_error: "Old-chunk backfill paused: claim query failed ({error}). Fix it and run /fd reload config."
+    protection_blocked: "Old-chunk backfill paused: claim existence cannot be safely queried for {plugins}. Protection is never bypassed."
   recipe-discovery:
     save_failed: "Failed to save recipe discovery data: {error}"
   i18n:
@@ -381,6 +387,7 @@ console:
     cooking_pot_total: "World '{world}' has {count} loaded cooking pots, threshold={threshold}. If TPS drops, reduce active cooking pots or lower cooking-pot.tick-budget."
     cooking_pot_density: "Chunk {chunk_x},{chunk_z} in world '{world}' has {count} loaded cooking pots, threshold={threshold}. Dense cooking pot areas can increase tick cost and display updates."
 command:
+  help_retrogen: "Inspect and preview old-chunk plant backfill"
   player_only: "<red>This command can only be used by a player."
   debug_tools_failed: "{prefix}<red>Debug tools failed to run; see the console for details.</red>"
   reload_usage: "<yellow>/fd reload <{targets}></yellow>"
@@ -501,3 +508,15 @@ command:
   buff_not_grantable: "<red>Buff '<white>{buff}</white>' cannot be granted by command."
   buff_player_not_found: "<red>Player '<white>{player}</white>' is not online."
   cleanup_done_displays: "{prefix}<white>Cleanup complete <gray>—</gray> <white>{count}</white> <gray>display entity(ies) cleared:</gray> <white>{displays}</white> <gray>proxy display(s),</gray> <white>{addon}</white> <gray>addon entity(ies)</gray></white>"
+
+retrogen:
+  started: "Old-chunk backfill enabled: worlds {worlds}, {rules} terrestrial plants; AIR only, once per chunk."
+  no_rules: "Old-chunk backfill has no eligible terrestrial plant rules; check the CraftEngine farm configs."
+  failed: "Skipped an old-chunk backfill operation: {error}"
+  protection_error: "Old-chunk backfill paused: claim query failed ({error}). Fix it and run /fd reload config."
+  protection_blocked: "Old-chunk backfill paused: claim existence cannot be safely queried for {plugins}. Protection is never bypassed."
+  status: "<gold>Old-chunk backfill</gold> <gray>enabled={enabled}, worlds={worlds}, configured rules={rules}, usable={usable}, CE={engine}, queued={queued}, scanned this session={scanned}, placed={placed}, protection blockers={blocked}"
+  usage: "<yellow>/fd retrogen status or /fd retrogen preview (preview requires an in-game player)"
+  preview_unavailable: "<yellow>Preview unavailable: world excluded, CraftEngine not ready, or no eligible plant rules."
+  preview: "<gold>Read-only preview</gold> <gray>chunk ({x}, {z}): {count} candidates, state={reason}, rejection counts={rejected}. No map changes."
+  preview_candidate: "<gray>{id} → ({x}, {y}, {z})"

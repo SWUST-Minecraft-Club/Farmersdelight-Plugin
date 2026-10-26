@@ -175,6 +175,35 @@ advancements:
 craftengine-resources:
   auto-completion: true
 
+# Optional backfill of OLD, already generated chunks. New chunks keep CE's normal world generation.
+# No terrain regeneration: only single-block terrestrial wild plants in AIR above natural soil.
+# Existing grass/flowers, water, crops, blocks, custom blocks and containers are never replaced.
+# Each eligible old chunk is attempted once, recorded in the chunk PDC and preserved across restarts.
+# Radius 3 around a candidate must look natural; chunks with vanilla/CE block entities are skipped.
+# This cannot identify an unclaimed player garden made entirely of natural blocks; exclude its area below.
+# Residence, GriefPrevention and WorldGuard claims are skipped. A detected unsupported claim provider or
+# a failed claim query PAUSES all backfill; /fd retrogen status reports the blocker (no player/OP bypass).
+# Preview your current chunk without changing anything: /fd retrogen preview (also works while disabled).
+# Apply changes with /fd reload config. No unexplored/unloaded chunks are force-loaded or generated.
+retro-generation:
+  enabled: false
+  # Empty = only the server's primary world. Otherwise list exact world names. NORMAL environment only.
+  worlds: []
+  chunks-per-tick: 1
+  attempts-per-plant: 32
+  max-plants-per-chunk: 3
+  # 1.0 follows each plant's rarity_filter from the active CE wild_plants.yml / wild_roots.yml.
+  # Higher = more frequent old-chunk patches. Does not change CE's normal new-chunk generation.
+  density-multiplier: 1.0
+  seed: 0
+  # Square exclusion around each world's spawn, in blocks. 0 disables this exclusion.
+  exclude-spawn-radius: 128
+  # Inclusive X/Z rectangles; every Y is excluded. Example:
+  # - {world: world, min-x: -1000, max-x: -500, min-z: 200, max-z: 800}
+  excluded-areas: []
+  # Additional claim/region plugin names to detect and pause for if no claim-existence adapter is available.
+  extra-protection-plugins: []
+
 # Recipe settings: which bundled recipes are written to disk, and how recipes are revealed in the books.
 recipes:
   # Bundled recipe files.

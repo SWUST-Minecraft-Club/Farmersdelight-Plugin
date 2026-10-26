@@ -78,6 +78,12 @@ compat:
       other_ingredients: "<red>锅里有这份菜谱未记录的其它食材。"
       invalid_recipe: "<red>这个菜谱物品没有可用的食材记录。"
 console:
+  retrogen:
+    started: "旧区块补生成已开启：世界 {worlds}，{rules} 种陆生植物；只填空气，每区块处理一次。"
+    no_rules: "旧区块补生成未启动：没有读到可用的陆生植物规则，请检查 CraftEngine 农场配置。"
+    failed: "旧区块补生成已跳过本次操作：{error}"
+    protection_error: "旧区块补生成已暂停：领地查询失败（{error}）。修复后 /fd reload config。"
+    protection_blocked: "旧区块补生成已暂停：无法安全查询这些保护插件的领地：{plugins}。不会绕过保护。"
   recipe-discovery:
     save_failed: "保存配方解锁数据失败：{error}"
   i18n:
@@ -381,6 +387,7 @@ console:
     cooking_pot_total: "世界 '{world}' 当前加载了 {count} 个厨锅，阈值为 {threshold}。如果 TPS 下降，建议减少活跃厨锅或调低 cooking-pot.tick-budget。"
     cooking_pot_density: "世界 '{world}' 的区块 {chunk_x},{chunk_z} 当前加载了 {count} 个厨锅，阈值为 {threshold}。过密厨锅区域可能增加 tick 和显示更新开销。"
 command:
+  help_retrogen: "检查和预览旧区块植物补生成"
   player_only: "<red>这个命令只能由玩家执行。"
   debug_tools_failed: "{prefix}<red>Debug 工具执行失败，详见控制台。</red>"
   reload_usage: "<yellow>/fd reload <{targets}></yellow>"
@@ -501,3 +508,15 @@ command:
   buff_not_grantable: "<red>buff「<white>{buff}</white>」无法通过命令发放。"
   buff_player_not_found: "<red>玩家「<white>{player}</white>」不在线。"
   cleanup_done_displays: "{prefix}<white>清理完成 <gray>—</gray> <white>共 {count}</white> <gray>个展示实体：</gray> <white>{displays}</white> <gray>个代理展示、</gray> <white>{addon}</white> <gray>个附属实体</gray></white>"
+
+retrogen:
+  started: "旧区块补生成已开启：世界 {worlds}，{rules} 种陆生植物；只填空气，每区块处理一次。"
+  no_rules: "旧区块补生成未启动：没有读到可用的陆生植物规则，请检查 CraftEngine 农场配置。"
+  failed: "旧区块补生成已跳过本次操作：{error}"
+  protection_error: "旧区块补生成已暂停：领地查询失败（{error}）。修复后 /fd reload config。"
+  protection_blocked: "旧区块补生成已暂停：无法安全查询这些保护插件的领地：{plugins}。不会绕过保护。"
+  status: "<gold>旧区块补生成</gold> <gray>启用={enabled}，世界={worlds}，配置规则={rules}，可用={usable}，CE={engine}，排队={queued}，本次启动已处理={scanned}，已放置={placed}，保护阻止={blocked}"
+  usage: "<yellow>/fd retrogen status 或 /fd retrogen preview（预览需要在游戏内执行）"
+  preview_unavailable: "<yellow>无法预览：世界不在补生成列表、CraftEngine 尚未就绪，或没有可用的植物规则。"
+  preview: "<gold>只读预览</gold> <gray>区块 ({x}, {z})：可放置 {count} 株，状态={reason}，筛选统计={rejected}。没有修改地图。"
+  preview_candidate: "<gray>{id} → ({x}, {y}, {z})"

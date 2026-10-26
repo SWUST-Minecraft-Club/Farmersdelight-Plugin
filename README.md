@@ -39,6 +39,14 @@ Expanded Delight is still being ported and is not part of the released addon set
 
 Install CraftEngine first, then place the FarmersDelight jar in `plugins/`. Use `/fd reload` for plugin configuration and `/ce reload` after changing CraftEngine resources.
 
+## Wild plants in existing worlds
+
+CraftEngine decorates new chunks according to each plant's biome and rarity. Loaded-pack messages do not
+backfill existing terrain. `1.0.3-folia26.3.2` adds optional, once-only backfill of loaded old chunks: it only
+adds single-block land plants to air over natural soil. A persistent chunk marker prevents repeat additions
+after reloads, restarts or harvesting. See [setup and diagnostics](docs/RETRO_GENERATION.md) for configuration,
+protection support, limitations and the read-only `/fd retrogen preview` command.
+
 ## Documentation
 
 The complete player, server, addon and API documentation is maintained in the [FarmersdelightPluginWiKi](https://github.com/IOVEYOUMC0/FarmersdelightPluginWiKi) repository. It can be connected to GitBook through its GitHub integration.

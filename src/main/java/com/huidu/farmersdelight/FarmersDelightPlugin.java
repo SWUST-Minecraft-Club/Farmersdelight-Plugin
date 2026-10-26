@@ -189,6 +189,11 @@ public class FarmersDelightPlugin extends JavaPlugin implements Listener {
     private final List<CuttingBoardInteractionHandler> cuttingBoardInteractionHandlers = new CopyOnWriteArrayList<>();
     private volatile KnifeSettings knifeSettings = new KnifeSettings(Set.of(), Set.of());
     private volatile DebugSettings debugSettings = new DebugSettings(false, Set.of());
+    private RetroGenerationService retroGeneration;
+
+    public RetroGenerationService retroGeneration() {
+        return retroGeneration;
+    }
 
     private final PrimaryWorldResolver primaryWorldResolver = new PrimaryWorldResolver(this);
 
@@ -420,6 +425,9 @@ public class FarmersDelightPlugin extends JavaPlugin implements Listener {
 
         registerMainCommand();
 
+        retroGeneration = new RetroGenerationService(this);
+        retroGeneration.start();
+
         // PlaceholderAPI bridge — registers iff PAPI is loaded so HUD plugins (BetterHud, MythicHud,
         // etc.) can read every CustomBuffRegistry entry per player. Soft-dep, no-op when absent.
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
@@ -454,6 +462,9 @@ public class FarmersDelightPlugin extends JavaPlugin implements Listener {
             prepareBlockDataForShutdown();
         }
         enabled = false;
+        if (retroGeneration != null) {
+            retroGeneration.stop();
+        }
         boolean folia = scheduler != null && scheduler.isFolia();
 
         // Runtime disable warning: CraftEngine and per-chunk block-entity state keep references to FD listeners,
@@ -784,6 +795,9 @@ public class FarmersDelightPlugin extends JavaPlugin implements Listener {
     }
 
     void refreshAfterCraftEngineReload() {
+        if (retroGeneration != null) {
+            retroGeneration.reload();
+        }
         // Re-apply the registrations other plugins made through ContentRegistration before anything below
         // reads the fresh pack content. CraftEngine keeps its built-in type registries for the whole
         // class-loader lifetime, so this is defence in depth; it is idempotent either way, because ids
@@ -852,6 +866,9 @@ public class FarmersDelightPlugin extends JavaPlugin implements Listener {
         phase = System.nanoTime();
         loadConfigs();
         long loadNanos = System.nanoTime() - phase;
+        if (retroGeneration != null) {
+            retroGeneration.reload();
+        }
         long configNanos = readConfigNanos + migrateNanos + validateNanos + loadNanos;
         phase = System.nanoTime();
         ToolRegistry.refresh();

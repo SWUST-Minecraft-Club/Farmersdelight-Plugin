@@ -1,6 +1,12 @@
 # Folia 26.3 构建与发布
 
-## 本次修复
+## 1.0.3-folia26.3.2：已有区块只补生成一次
+
+新增可选的旧区块补生成，设置、检查命令和边界见 [旧区块补生成说明](RETRO_GENERATION.md)。
+每个区块在尝试补生成前写入永久标记；重启、重载、修改概率或采掉植物后都不会再补种。
+这次只需更新 FarmersDelight，CraftEngine 继续使用 `26.9.2-folia26.3.1` 的 Paper loader。
+
+## 已包含的 Folia 修复
 
 - 调整 CraftEngine 依赖加载顺序，修复启用时的类加载失败。
 - 在 CraftEngine 关闭存储前保存烹饪锅、砧板、煎锅与炉灶快照，保留待恢复的 NBT 与物品数据。
@@ -8,9 +14,9 @@
 - 自动迁移旧版默认野生植物配置；先备份、原子写入，保留注释、版本键与自定义设置。
 - 已在独立 Folia 26.3 build 5 alpha、Java 25 环境验证正常关服重启、容器内容与作物生成。
 
-使用 `farmersdelight-1.0.3-folia26.3.1.jar`，配套安装
+使用 `farmersdelight-1.0.3-folia26.3.2.jar`，配套安装
 [CraftEngine 26.9.2-folia26.3.1](https://github.com/SWUST-Minecraft-Club/craft-engine/releases/tag/v26.9.2-folia26.3.1)
-中的 `craft-engine-paper-plugin` JAR。两边都需要更新。
+中的 `craft-engine-paper-plugin` JAR。尚未安装该 CE 修复版时，两边都需要更新。
 上述验证针对正常关服；本次修复不能恢复更新前已经丢失的数据。
 
 ## 本地构建
@@ -45,13 +51,13 @@ Folia 26.3 发布构建使用 JDK 25，插件字节码仍以 Java 21 为目标�
 ## tag 自动发布
 
 `.github/workflows/build-release.yml` 包含两种 debug-tools 配置的常规构建、Folia 26.3 构建、JUnit 测试与仓库契约检查。
-所有检查通过后，推送 `v*` tag 会发布 GitHub Release，上传 Folia 插件、`SHA256SUMS.txt` 和本文。
+所有检查通过后，推送 `v*` tag 会发布 GitHub Release，上传 Folia 插件、`SHA256SUMS.txt`、补生成说明和本文。
 tag 必须精确匹配 `build.gradle.kts` 中的版本：
 
 ```bash
-git tag -a v1.0.3-folia26.3.1 -m "Fix Folia persistence and wild crop generation"
+git tag -a v1.0.3-folia26.3.2 -m "Add once-only old-chunk wild plant generation"
 git push origin main
-git push origin v1.0.3-folia26.3.1
+git push origin v1.0.3-folia26.3.2
 ```
 
 发布使用仓库自带的 `GITHUB_TOKEN`，无需额外 token；只有发布 job 申请 `contents: write`。

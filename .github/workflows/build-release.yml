@@ -161,7 +161,7 @@ jobs:
         run: |
           mkdir -p dist
           cp "build/libs/farmersdelight-${VERSION}.jar" dist/
-          cp docs/RELEASING.md dist/RELEASING.md
+          cp docs/RELEASING.md docs/RETRO_GENERATION.md dist/
           cd dist
           sha256sum ./*.jar > SHA256SUMS.txt
 
@@ -218,9 +218,9 @@ jobs:
         run: |
           sha256sum --check SHA256SUMS.txt
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" ./*.jar SHA256SUMS.txt RELEASING.md --clobber
+            gh release upload "$TAG" ./*.jar SHA256SUMS.txt RELEASING.md RETRO_GENERATION.md --clobber
           else
-            gh release create "$TAG" ./*.jar SHA256SUMS.txt RELEASING.md \
+            gh release create "$TAG" ./*.jar SHA256SUMS.txt RELEASING.md RETRO_GENERATION.md \
               --verify-tag --title "FarmersDelight $TAG" --generate-notes \
-              --notes 'Folia 26.3 适配版：修复正常关服重启后容器数据丢失、区块保存与野生作物生成。请配套安装 CraftEngine 26.9.2-folia26.3.1 的 Paper 插件版本。修复及构建说明见附件 RELEASING.md。'
+              --notes 'Folia 26.3 适配版：新增默认关闭的一次性旧区块野生植物补生成，每区块永久标记、只填空气，重启或采集后不重复补种。包含此前容器保存修复。配套 CraftEngine 26.9.2-folia26.3.1 的 Paper 插件版本。开启方法与安全边界见附件 RETRO_GENERATION.md。'
           fi
