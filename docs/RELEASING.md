@@ -1,5 +1,12 @@
 # Folia 26.3 构建与发布
 
+## 1.0.3-folia26.3.3：查询实际植物与生成诊断
+
+- 新增 `/fd retrogen locate`：只读查找已加载区块的实际野生植物坐标，最多列出最近 10 个。
+- 已处理区块的预览明确解释一次性标记，增加世界、群系、密度和累计筛选诊断。
+- `placed=4` 表示已经放置 4 个方块；原概率较低时，少量生成不容易直接看到。配置建议见[补生成说明](RETRO_GENERATION.md)。
+- 保留所有已有完成标记、生成概率和放置安全条件；更新不触发重复补种。
+
 ## 1.0.3-folia26.3.2：已有区块只补生成一次
 
 新增可选的旧区块补生成，设置、检查命令和边界见 [旧区块补生成说明](RETRO_GENERATION.md)。
@@ -14,7 +21,7 @@
 - 自动迁移旧版默认野生植物配置；先备份、原子写入，保留注释、版本键与自定义设置。
 - 已在独立 Folia 26.3 build 5 alpha、Java 25 环境验证正常关服重启、容器内容与作物生成。
 
-使用 `farmersdelight-1.0.3-folia26.3.2.jar`，配套安装
+使用 `farmersdelight-1.0.3-folia26.3.3.jar`，配套安装
 [CraftEngine 26.9.2-folia26.3.1](https://github.com/SWUST-Minecraft-Club/craft-engine/releases/tag/v26.9.2-folia26.3.1)
 中的 `craft-engine-paper-plugin` JAR。尚未安装该 CE 修复版时，两边都需要更新。
 上述验证针对正常关服；本次修复不能恢复更新前已经丢失的数据。
@@ -55,9 +62,9 @@ Folia 26.3 发布构建使用 JDK 25，插件字节码仍以 Java 21 为目标�
 tag 必须精确匹配 `build.gradle.kts` 中的版本：
 
 ```bash
-git tag -a v1.0.3-folia26.3.2 -m "Add once-only old-chunk wild plant generation"
+git tag -a v1.0.3-folia26.3.3 -m "Locate existing wild plants and explain generation diagnostics"
 git push origin main
-git push origin v1.0.3-folia26.3.2
+git push origin v1.0.3-folia26.3.3
 ```
 
 发布使用仓库自带的 `GITHUB_TOKEN`，无需额外 token；只有发布 job 申请 `contents: write`。

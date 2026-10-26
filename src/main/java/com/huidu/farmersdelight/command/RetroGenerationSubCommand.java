@@ -25,15 +25,18 @@ final class RetroGenerationSubCommand extends SubCommand {
         }
         if (args.length == 1 || args.length == 2 && args[1].equalsIgnoreCase("status")) {
             sender.sendMessage(I18n.getComponent("retrogen.status", service.status()));
+            sender.sendMessage(I18n.getComponent("retrogen.status_details", service.diagnostics()));
         } else if (args.length == 2 && args[1].equalsIgnoreCase("preview") && sender instanceof Player player) {
             plugin.scheduler().runForEntity(player, () -> service.preview(player));
+        } else if (args.length == 2 && args[1].equalsIgnoreCase("locate") && sender instanceof Player player) {
+            plugin.scheduler().runForEntity(player, () -> service.locate(player));
         } else {
-            sender.sendMessage(I18n.getComponent("retrogen.usage"));
+            sender.sendMessage(I18n.getComponent("retrogen.usage_commands"));
         }
     }
 
     @Override
     List<String> tabComplete(CommandSender sender, String[] args) {
-        return args.length == 2 ? CommandSupport.prefixFilter(args[1], List.of("status", "preview")) : List.of();
+        return args.length == 2 ? CommandSupport.prefixFilter(args[1], List.of("status", "preview", "locate")) : List.of();
     }
 }

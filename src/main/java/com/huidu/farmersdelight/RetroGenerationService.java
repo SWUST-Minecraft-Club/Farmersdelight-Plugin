@@ -24,6 +24,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockFormEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.event.server.PluginEnableEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
@@ -56,12 +57,16 @@ public final class RetroGenerationService implements Listener {
     private final FarmersDelightPlugin plugin;
     private final NamespacedKey marker;
     private final CraftEngineResourceLease resourceLease;
+    private final RetroGenerationLocator locator;
     private final Queue<Ticket> queue = new ConcurrentLinkedQueue<>();
     private final Map<ChunkKey, Ticket> pending = new ConcurrentHashMap<>();
     private final AtomicLong generation = new AtomicLong();
     private final AtomicBoolean failureReported = new AtomicBoolean();
     private final LongAdder scanned = new LongAdder();
     private final LongAdder placed = new LongAdder();
+    private final LongAdder empty = new LongAdder();
+    private final LongAdder refused = new LongAdder();
+    private final Map<RetroGenerationEngine.Rejection, LongAdder> rejections = new ConcurrentHashMap<>();
     private volatile Snapshot snapshot;
     private volatile RetroGenerationProtection protection;
     private volatile boolean stopped;
@@ -74,6 +79,7 @@ public final class RetroGenerationService implements Listener {
         this.plugin = plugin;
         marker = new NamespacedKey(plugin, "retro_generation_v1");
         resourceLease = new CraftEngineResourceLease(plugin.getCraftEngine(), plugin.getLogger());
+        locator = new RetroGenerationLocator(plugin, resourceLease, this::ready);
     }
 
     void start() {
@@ -129,9 +135,13 @@ public final class RetroGenerationService implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onWorldUnload(WorldUnloadEvent event) {
         UUID world = event.getWorld().getUID();
+        locator.cancelWorld(world);
         pending.keySet().removeIf(key -> key.world().equals(world));
         queue.removeIf(ticket -> ticket.key().world().equals(world));
     }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) { locator.cancelPlayer(event.getPlayer().getUniqueId()); }
 
     @EventHandler
     public void onPluginEnable(PluginEnableEvent event) { invalidateProtection(); }
@@ -150,6 +160,7 @@ public final class RetroGenerationService implements Listener {
     }
 
     private void drain() {
+        locator.tick();
         Snapshot current = snapshot;
         if (stopped || current == null || !current.settings().enabled() || !ready() || current.rules().isEmpty()) return;
         RetroGenerationProtection guard = protection(current);
@@ -208,7 +219,13 @@ public final class RetroGenerationService implements Listener {
                 RetroGenerationEngine.Plan plan = RetroGenerationEngine.plan(terrain, current.settings(), rules);
                 if (!guard.healthy()) return;
                 int additions = RetroGenerationEngine.commit(terrain, current.settings(), plan);
-                if ("ready".equals(plan.reason())) scanned.increment();
+                if ("ready".equals(plan.reason())) {
+                    scanned.increment();
+                    if (additions == 0) empty.increment();
+                    refused.add(plan.candidates().size() - additions);
+                    plan.rejected().forEach((reason, count) ->
+                            rejections.computeIfAbsent(reason, key -> new LongAdder()).add(count));
+                }
                 placed.add(additions);
             }
         } catch (Exception | LinkageError failure) {
@@ -281,6 +298,18 @@ public final class RetroGenerationService implements Listener {
                         : guard.healthy() ? "-" : "claim query failed; reload required");
     }
 
+    public Map<String, String> diagnostics() {
+        Snapshot current = snapshot;
+        Map<RetroGenerationEngine.Rejection, Long> counts = new java.util.EnumMap<>(RetroGenerationEngine.Rejection.class);
+        rejections.forEach((reason, count) -> counts.put(reason, count.sum()));
+        return Map.of("density", current == null ? "-" : String.valueOf(current.settings().densityMultiplier()),
+                "empty", String.valueOf(empty.sum()), "refused", String.valueOf(refused.sum()),
+                "rejected", counts.isEmpty() ? "-" : counts.toString());
+    }
+
+    /** Finds actual saved plants, including those placed before this server session. */
+    public void locate(Player player) { locator.start(player); }
+
     /** Read-only preview of the player's current chunk; called on that player's owning region. */
     public void preview(Player player) {
         Snapshot current = snapshot;
@@ -288,6 +317,9 @@ public final class RetroGenerationService implements Listener {
             player.sendMessage(I18n.getComponent("retrogen.preview_unavailable", player));
             return;
         }
+        player.sendMessage(I18n.getComponent("retrogen.preview_context", player, Map.of(
+                "world", player.getWorld().getName(), "biome", player.getLocation().getBlock().getBiome().getKey().toString(),
+                "density", String.valueOf(current.settings().densityMultiplier()))));
         try (AutoCloseable lease = resourceLease.tryAcquire()) {
             if (lease == null) {
                 player.sendMessage(I18n.getComponent("retrogen.preview_unavailable", player));
@@ -307,6 +339,11 @@ public final class RetroGenerationService implements Listener {
                 return;
             }
             var plan = RetroGenerationEngine.plan(terrain, current.settings(), rules);
+            if ("processed".equals(plan.reason())) {
+                player.sendMessage(I18n.getComponent("retrogen.preview_processed", player,
+                        Map.of("x", String.valueOf(chunk.getX()), "z", String.valueOf(chunk.getZ()))));
+                return;
+            }
             player.sendMessage(I18n.getComponent("retrogen.preview", player, Map.of("x", String.valueOf(chunk.getX()),
                     "z", String.valueOf(chunk.getZ()), "count", String.valueOf(plan.candidates().size()),
                     "reason", plan.reason(), "rejected", plan.rejected().toString())));
@@ -329,6 +366,7 @@ public final class RetroGenerationService implements Listener {
 
     void stop() {
         stopped = true;
+        locator.stop();
         generation.incrementAndGet();
         if (dispatcher != null) dispatcher.cancel();
         queue.clear();

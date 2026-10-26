@@ -222,5 +222,5 @@ jobs:
           else
             gh release create "$TAG" ./*.jar SHA256SUMS.txt RELEASING.md RETRO_GENERATION.md \
               --verify-tag --title "FarmersDelight $TAG" --generate-notes \
-              --notes 'Folia 26.3 适配版：新增默认关闭的一次性旧区块野生植物补生成，每区块永久标记、只填空气，重启或采集后不重复补种。包含此前容器保存修复。配套 CraftEngine 26.9.2-folia26.3.1 的 Paper 插件版本。开启方法与安全边界见附件 RETRO_GENERATION.md。'
+              --notes 'Folia 26.3 适配版：新增 /fd retrogen locate 查找已加载区块中的实际植物坐标，改进一次性补生成状态与筛选诊断。保留已有完成标记和生成概率，重启或采集后不重复补种。包含此前容器保存修复。配套 CraftEngine 26.9.2-folia26.3.1 的 Paper 插件版本。用法见附件 RETRO_GENERATION.md。'
           fi
