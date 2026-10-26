@@ -17,7 +17,18 @@ import java.util.Set;
 
 /** Only the bundled, single-block, terrestrial wild plants may be added to an existing map. */
 public record RetroGenerationRule(String id, Set<String> biomes, Set<String> worlds,
-                                  Set<Material> soils, int rarity) {
+                                  Set<Material> soils, int rarity, Patch patch) {
+    public RetroGenerationRule(String id, Set<String> biomes, Set<String> worlds, Set<Material> soils, int rarity) {
+        this(id, biomes, worlds, soils, rarity, new Patch(64, 6, 3, true));
+    }
+
+    /** The bundled native patches use symmetric triangular offsets, not uniform independent columns. */
+    public record Patch(int tries, int horizontalSpread, int verticalSpread, boolean flat) {
+        public Patch {
+            if (tries < 1 || tries > 256 || horizontalSpread < 0 || horizontalSpread > 16
+                    || verticalSpread < 0 || verticalSpread > 16) throw new IllegalArgumentException("Unsupported plant patch bounds");
+        }
+    }
     private static final Set<String> PLANTS = Set.of("wild_cabbages", "wild_onions", "wild_tomatoes",
             "wild_carrots", "wild_potatoes", "wild_beetroots", "sandy_shrub");
 
@@ -56,11 +67,12 @@ public record RetroGenerationRule(String id, Set<String> biomes, Set<String> wor
             Object feature = selectVersion(rule.get("feature"), version);
             Set<Material> soils = placementSoils(placement);
             int rarity = rarity(placement);
-            if (soils == null || !simplePlant(feature, id)) continue;
+            Patch patch = patch(placement, feature);
+            if (soils == null || patch == null || !simplePlant(feature, id)) continue;
             // Before 26.1 the predicate belongs to the nested random-patch feature.
             if (feature instanceof Map<?, ?> map && "minecraft:random_patch".equals(map.get("type"))) {
                 Object config = map.get("config");
-                if (!(config instanceof Map<?, ?> patch) || !(patch.get("feature") instanceof Map<?, ?> nested)) continue;
+                if (!(config instanceof Map<?, ?> legacyPatch) || !(legacyPatch.get("feature") instanceof Map<?, ?> nested)) continue;
                 Set<Material> inner = placementSoils(nested.get("placement"));
                 if (inner == null) continue;
                 if (soils.isEmpty()) soils = inner;
@@ -68,7 +80,7 @@ public record RetroGenerationRule(String id, Set<String> biomes, Set<String> wor
             }
             if (rarity < 1 || soils.isEmpty()) continue;
             result.add(new RetroGenerationRule(id, Set.copyOf(biomes), strings(rule, "world", "worlds"),
-                    Set.copyOf(soils), rarity));
+                    Set.copyOf(soils), rarity, patch));
         }
         return result;
     }
@@ -112,6 +124,51 @@ public record RetroGenerationRule(String id, Set<String> biomes, Set<String> wor
             }
         }
         return -1;
+    }
+
+    private static Patch patch(Object placement, Object feature) {
+        if (!(placement instanceof List<?> modifiers) || !(feature instanceof Map<?, ?> map)) return null;
+        List<String> types = new ArrayList<>();
+        for (Object modifier : modifiers) {
+            if (!(modifier instanceof Map<?, ?> entry) || !(entry.get("type") instanceof String type)) return null;
+            types.add(type);
+        }
+        boolean legacy = "minecraft:random_patch".equals(map.get("type"));
+        List<String> expected = legacy
+                ? List.of("minecraft:rarity_filter", "minecraft:in_square", "minecraft:heightmap", "minecraft:biome")
+                : List.of("minecraft:rarity_filter", "minecraft:in_square", "minecraft:heightmap", "minecraft:count",
+                        "minecraft:offset", "minecraft:block_predicate_filter", "minecraft:biome");
+        if (!types.stream().map(type -> type.equals("minecraft:random_offset") ? "minecraft:offset" : type).toList().equals(expected)) return null;
+        if (!(modifiers.get(2) instanceof Map<?, ?> height) || !"MOTION_BLOCKING".equals(height.get("heightmap"))) return null;
+        try {
+            if (legacy) {
+                if (!(map.get("config") instanceof Map<?, ?> config)) return null;
+                return new Patch(integer(config.get("tries")), integer(config.get("xz_spread")), integer(config.get("y_spread")), false);
+            }
+            Map<?, ?> count = (Map<?, ?>) modifiers.get(3), offset = (Map<?, ?>) modifiers.get(4);
+            boolean modern = "minecraft:offset".equals(offset.get("type"));
+            int x = triangle(offset.get(modern ? "x" : "xz_spread"));
+            int z = triangle(offset.get(modern ? "z" : "xz_spread"));
+            if (x != z) return null;
+            return new Patch(integer(count.get("count")), x, triangle(offset.get(modern ? "y" : "y_spread")), true);
+        } catch (IllegalArgumentException invalid) {
+            return null;
+        }
+    }
+
+    private static int triangle(Object raw) {
+        if (!(raw instanceof Map<?, ?> provider) || !"minecraft:trapezoid".equals(provider.get("type"))
+                || integer(provider.get("plateau")) != 0) throw new IllegalArgumentException("Unsupported offset provider");
+        int max = integer(provider.get("max"));
+        if (integer(provider.get("min")) != -max) throw new IllegalArgumentException("Asymmetric patch offset");
+        return max;
+    }
+
+    private static int integer(Object raw) {
+        if (!(raw instanceof Number number) || number.doubleValue() != number.intValue()) {
+            throw new IllegalArgumentException("Plant patch needs integer parameters");
+        }
+        return number.intValue();
     }
 
     private static boolean simplePlant(Object feature, String id) {

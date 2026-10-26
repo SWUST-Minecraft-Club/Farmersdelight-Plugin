@@ -85,7 +85,10 @@ public final class ConfigBootstrap {
                     "cooking-pot.display.visibility-check-interval-ticks",
                     // The pot decides "placement or GUI" from the item in hand now, so the timer that used to
                     // swallow every interaction for a moment after a placement is no longer read.
-                    "cooking-pot.place-interaction-cooldown-ms")
+                    "cooking-pot.place-interaction-cooldown-ms",
+                    // Native plant placement supplies its own 64 tries and patch size.
+                    "retro-generation.attempts-per-plant",
+                    "retro-generation.max-plants-per-chunk")
             .registrySection("heat-sources",
                     // Guarded at the parent, not at the foods child: an admin who disables every food by
                     // deleting the whole foods block leaves no foods path for a narrower guard to match, and

@@ -12,7 +12,7 @@ plugins {
 }
 
 group = "com.huidu.farmersdelight"
-version = "1.0.3-folia26.3.3"
+version = "1.0.3-folia26.3.4"
 
 repositories {
     mavenCentral()

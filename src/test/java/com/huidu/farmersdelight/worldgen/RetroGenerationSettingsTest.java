@@ -36,7 +36,6 @@ class RetroGenerationSettingsTest {
     @Test void malformedSettingsNeverExpandScopeOrDensity() {
         for (var entry : List.of(Map.entry("worlds", "world"), Map.entry("enabled", "yes"),
                 Map.entry("worlds", List.of(12)), Map.entry("chunks-per-tick", 5),
-                Map.entry("attempts-per-plant", 65), Map.entry("max-plants-per-chunk", 0),
                 Map.entry("density-multiplier", Double.NaN), Map.entry("density-multiplier", "lots"),
                 Map.entry("exclude-spawn-radius", -1), Map.entry("seed", 1.5),
                 Map.entry("excluded-areas", "not a list"))) {
@@ -54,5 +53,13 @@ class RetroGenerationSettingsTest {
                     "max-x", max, "min-z", 0, "max-z", 20)));
             assertThrows(IllegalArgumentException.class, () -> RetroGenerationSettings.load(config, "world"));
         }
+    }
+
+    @Test void retiredPlantCapsDoNotSuppressNativePatchSize() {
+        MemoryConfiguration config = new MemoryConfiguration();
+        config.set("retro-generation.attempts-per-plant", 32);
+        config.set("retro-generation.max-plants-per-chunk", 3);
+        assertEquals(RetroGenerationSettings.load(new MemoryConfiguration(), "world"),
+                RetroGenerationSettings.load(config, "world"));
     }
 }

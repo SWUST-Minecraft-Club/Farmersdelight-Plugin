@@ -5,10 +5,12 @@ import com.huidu.farmersdelight.util.CustomBlockUtils;
 import com.huidu.farmersdelight.util.scheduler.PluginTask;
 import com.huidu.farmersdelight.worldgen.RetroGenerationEngine;
 import com.huidu.farmersdelight.worldgen.RetroGenerationProtection;
+import com.huidu.farmersdelight.worldgen.RetroGenerationPlacements;
 import com.huidu.farmersdelight.worldgen.RetroGenerationRule;
 import com.huidu.farmersdelight.worldgen.RetroGenerationSettings;
 import net.momirealms.craftengine.bukkit.api.CraftEngineBlocks;
 import net.momirealms.craftengine.core.block.UpdateFlags;
+import net.momirealms.craftengine.core.block.ImmutableBlockState;
 import net.momirealms.craftengine.core.block.behavior.BlockBehavior;
 import net.momirealms.craftengine.core.util.Key;
 import net.momirealms.craftengine.core.world.CEWorld;
@@ -34,6 +36,7 @@ import org.bukkit.persistence.PersistentDataType;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -384,6 +387,7 @@ public final class RetroGenerationService implements Listener {
         private final Snapshot current;
         private final RetroGenerationProtection guard;
         private final Location spawn;
+        private final Map<RetroGenerationPlacements.Position, ImmutableBlockState> freshPlants = new HashMap<>();
 
         private BukkitTerrain(Chunk chunk, CEWorld ceWorld, Snapshot current, RetroGenerationProtection guard) {
             this.chunk = chunk;
@@ -394,7 +398,9 @@ public final class RetroGenerationService implements Listener {
             spawn = world.getSpawnLocation();
         }
 
-        private Block block(int x, int y, int z) { return chunk.getBlock(x, y, z); }
+        private Block block(int x, int y, int z) {
+            return world.getBlockAt((chunkX() << 4) + x, y, (chunkZ() << 4) + z);
+        }
         @Override public int chunkX() { return chunk.getX(); }
         @Override public int chunkZ() { return chunk.getZ(); }
         @Override public int minHeight() { return world.getMinHeight(); }
@@ -404,12 +410,27 @@ public final class RetroGenerationService implements Listener {
         @Override public int spawnX() { return spawn.getBlockX(); }
         @Override public int spawnZ() { return spawn.getBlockZ(); }
         @Override public int surfaceY(int x, int z) {
-            return world.getHighestBlockYAt((chunkX() << 4) + x, (chunkZ() << 4) + z, HeightMap.MOTION_BLOCKING_NO_LEAVES);
+            return world.getHighestBlockYAt((chunkX() << 4) + x, (chunkZ() << 4) + z, HeightMap.MOTION_BLOCKING);
+        }
+        @Override public RetroGenerationPlacements.Result placements(RetroGenerationSettings settings, RetroGenerationRule rule) {
+            return RetroGenerationNativePlacements.sample(world, this, settings, rule);
         }
         @Override public Material type(int x, int y, int z) { return block(x, y, z).getType(); }
+        @Override public boolean readable(int x, int z) {
+            if (x >= 0 && x < 16 && z >= 0 && z < 16) return true;
+            int blockX = (chunkX() << 4) + x, blockZ = (chunkZ() << 4) + z;
+            return world.isChunkLoaded(blockX >> 4, blockZ >> 4)
+                    && ceWorld.getChunkAtIfLoaded(blockX >> 4, blockZ >> 4) != null
+                    && plugin.scheduler().isOwnedByCurrentRegion(new Location(world, blockX, 0, blockZ));
+        }
         @Override public boolean custom(int x, int y, int z) {
             var saved = ceWorld.getBlockStateAtIfLoaded((chunkX() << 4) + x, y, (chunkZ() << 4) + z);
             return (saved != null && !saved.isEmpty()) || CraftEngineBlocks.isCustomBlock(block(x, y, z));
+        }
+        @Override public boolean freshPlant(int x, int y, int z) {
+            var expected = freshPlants.get(new RetroGenerationPlacements.Position(x, y, z));
+            return expected != null && expected.equals(ceWorld.getBlockStateAtIfLoaded((chunkX() << 4) + x, y, (chunkZ() << 4) + z))
+                    && CraftEngineBlocks.getBukkitBlockData(expected).equals(block(x, y, z).getBlockData());
         }
         @Override public String biome(int x, int y, int z) { return block(x, y, z).getBiome().getKey().toString(); }
         @Override public boolean skyExposed(int x, int y, int z) { return block(x, y, z).getLightFromSky() == 15; }
@@ -437,7 +458,9 @@ public final class RetroGenerationService implements Listener {
             if (event.isCancelled() || !expected.equals(event.getNewState().getBlockData()) || !active()
                     || RetroGenerationEngine.rejection(this, current.settings(), candidate) != null) return false;
             // Known single-height wild plants only; no shape/neighbour updates, sound, drops or terrain generation.
-            return CraftEngineBlocks.place(target.getLocation(), state, UpdateFlags.UPDATE_NO_PHYS, false, true);
+            boolean success = CraftEngineBlocks.place(target.getLocation(), state, UpdateFlags.UPDATE_NO_PHYS, false, true);
+            if (success) freshPlants.put(new RetroGenerationPlacements.Position(candidate.x(), candidate.y(), candidate.z()), state);
+            return success;
         }
     }
 }

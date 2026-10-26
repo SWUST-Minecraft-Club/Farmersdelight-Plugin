@@ -37,6 +37,42 @@ class RetroGenerationEngineTest {
         assertEquals("processed", RetroGenerationEngine.plan(terrain, settings(), List.of(RULE)).reason());
     }
 
+    @Test void oneNativePatchCanKeepAdjacentPlantsAndExceedTheOldThreePlantCap() {
+        Terrain terrain = new Terrain() {
+            @Override public RetroGenerationPlacements.Result placements(RetroGenerationSettings settings, RetroGenerationRule rule) {
+                return new RetroGenerationPlacements.Result(List.of(new RetroGenerationPlacements.Position(6, 65, 6),
+                        new RetroGenerationPlacements.Position(7, 65, 6), new RetroGenerationPlacements.Position(8, 65, 6),
+                        new RetroGenerationPlacements.Position(9, 65, 6), new RetroGenerationPlacements.Position(9, 65, 6)), false);
+            }
+            @Override public boolean place(RetroGenerationEngine.Candidate candidate) {
+                boolean result = super.place(candidate);
+                blocks.put(new Pos(candidate.x(), candidate.y(), candidate.z()), Material.NOTE_BLOCK);
+                custom.add(new Pos(candidate.x(), candidate.y(), candidate.z()));
+                return result;
+            }
+        };
+        var plan = RetroGenerationEngine.plan(terrain, settings(), List.of(RULE));
+        assertEquals(4, plan.candidates().size(), "native duplicates merge but adjacent plant positions remain");
+        assertEquals(4, RetroGenerationEngine.commit(terrain, settings(), plan), "earlier plants in the same pass must not block the rest of the patch");
+        assertEquals(0, RetroGenerationEngine.commit(terrain, settings(), plan));
+    }
+
+    @Test void acceptsEdgePositionsOnlyWhenTheirWholeGuardAreaIsReadable() {
+        Terrain terrain = new Terrain() {
+            @Override public boolean readable(int x, int z) { return true; }
+            @Override public Material type(int x, int y, int z) { return y == 64 ? Material.GRASS_BLOCK : y < 64 ? Material.DIRT : Material.AIR; }
+            @Override public boolean custom(int x, int y, int z) { return false; }
+            @Override public String biome(int x, int y, int z) { return "minecraft:plains"; }
+            @Override public boolean skyExposed(int x, int y, int z) { return true; }
+            @Override public boolean unclaimed(int x, int y, int z) { return true; }
+        };
+        var edge = new RetroGenerationEngine.Candidate(RULE, 0, 65, 0);
+        assertNull(RetroGenerationEngine.rejection(terrain, settings(), edge));
+        assertEquals(RetroGenerationEngine.Rejection.HEIGHT, RetroGenerationEngine.rejection(new Terrain(), settings(), edge));
+        assertEquals(RetroGenerationEngine.Rejection.HEIGHT, RetroGenerationEngine.rejection(terrain, settings(),
+                new RetroGenerationEngine.Candidate(RULE, -1, 65, 0)), "native spillover cannot write a neighboring chunk");
+    }
+
     @Test void emptyRandomPassIsAlsoMarkedOnce() {
         Terrain terrain = new Terrain();
         var rare = new RetroGenerationRule(RULE.id(), RULE.biomes(), Set.of(), RULE.soils(), Integer.MAX_VALUE);
@@ -187,6 +223,7 @@ class RetroGenerationEngineTest {
             return blocks.getOrDefault(new Pos(x, y, z), y == 64 ? Material.GRASS_BLOCK : y < 64 ? Material.DIRT : Material.AIR);
         }
         @Override public boolean custom(int x, int y, int z) { bounds(x, z); return custom.contains(new Pos(x, y, z)); }
+        @Override public boolean freshPlant(int x, int y, int z) { return writes.contains(new Pos(x, y, z)); }
         @Override public String biome(int x, int y, int z) { bounds(x, z); return biome; }
         @Override public boolean skyExposed(int x, int y, int z) { bounds(x, z); return sky; }
         @Override public boolean unclaimed(int x, int y, int z) { bounds(x, z); return !claimed; }

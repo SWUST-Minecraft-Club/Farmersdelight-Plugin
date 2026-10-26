@@ -4,10 +4,10 @@ import org.bukkit.Material;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SplittableRandom;
 
 /** Plans and commits additions within one loaded chunk; never runs Minecraft terrain/feature generators. */
 public final class RetroGenerationEngine {
@@ -37,8 +37,15 @@ public final class RetroGenerationEngine {
         int spawnX();
         int spawnZ();
         int surfaceY(int localX, int localZ);
+        default RetroGenerationPlacements.Result placements(RetroGenerationSettings settings, RetroGenerationRule rule) {
+            return RetroGenerationPlacements.sample(this, settings, rule);
+        }
         Material type(int localX, int y, int localZ);
+        /** Neighbor guards may read only already loaded chunks owned by the current region. */
+        default boolean readable(int localX, int localZ) { return localX >= 0 && localX <= 15 && localZ >= 0 && localZ <= 15; }
         boolean custom(int localX, int y, int localZ);
+        /** Only plants successfully placed by this pass, still matching the exact placed state. */
+        default boolean freshPlant(int localX, int y, int localZ) { return false; }
         String biome(int localX, int y, int localZ);
         boolean skyExposed(int localX, int y, int localZ);
         boolean unclaimed(int localX, int y, int localZ);
@@ -61,33 +68,20 @@ public final class RetroGenerationEngine {
         if (terrain.hasBlockEntities()) return empty("block_entities");
         List<Candidate> candidates = new ArrayList<>();
         Map<Rejection, Integer> rejected = new EnumMap<>(Rejection.class);
+        Set<RetroGenerationPlacements.Position> positions = new HashSet<>();
         for (RetroGenerationRule rule : rules) {
             if (!rule.worlds().isEmpty() && !rule.worlds().contains(terrain.worldName())) continue;
-            long seed = terrain.worldSeed() ^ settings.seed() ^ ((long) terrain.chunkX() * 341873128712L)
-                    ^ ((long) terrain.chunkZ() * 132897987541L) ^ rule.id().hashCode();
-            SplittableRandom random = new SplittableRandom(seed);
-            if (random.nextDouble() >= Math.min(1.0, settings.densityMultiplier() / rule.rarity())) {
+            var placement = terrain.placements(settings, rule);
+            if (placement.chanceMissed()) {
                 rejected.merge(Rejection.CHANCE, 1, Integer::sum);
                 continue;
             }
-            int[] columns = new int[100];
-            for (int i = 0; i < columns.length; i++) columns[i] = i;
-            for (int i = 0; i < settings.attemptsPerPlant(); i++) {
+            for (var position : placement.positions()) {
                 if (!terrain.active()) return empty("unavailable");
-                int index = i + random.nextInt(columns.length - i);
-                int column = columns[index];
-                columns[index] = columns[i];
-                columns[i] = column;
-                int x = MARGIN + column % 10;
-                int z = MARGIN + column / 10;
-                Candidate candidate = new Candidate(rule, x, terrain.surfaceY(x, z) + 1, z);
+                Candidate candidate = new Candidate(rule, position.x(), position.y(), position.z());
                 Rejection rejection = rejection(terrain, settings, candidate);
                 if (rejection != null) rejected.merge(rejection, 1, Integer::sum);
-                else if (candidates.stream().noneMatch(other -> Math.abs(other.x() - x) <= MARGIN
-                        && Math.abs(other.z() - z) <= MARGIN)) candidates.add(candidate);
-                if (candidates.size() >= settings.maxPlantsPerChunk()) {
-                    return new Plan(List.copyOf(candidates), Map.copyOf(rejected), "ready");
-                }
+                else if (positions.add(position)) candidates.add(candidate);
             }
         }
         return new Plan(List.copyOf(candidates), Map.copyOf(rejected), "ready");
@@ -108,7 +102,7 @@ public final class RetroGenerationEngine {
 
     public static Rejection rejection(Terrain terrain, RetroGenerationSettings settings, Candidate candidate) {
         int x = candidate.x(), y = candidate.y(), z = candidate.z();
-        if (x < MARGIN || x > 15 - MARGIN || z < MARGIN || z > 15 - MARGIN
+        if (x < 0 || x > 15 || z < 0 || z > 15
                 || y < terrain.minHeight() + 3 || y >= terrain.maxHeight() - 4) return Rejection.HEIGHT;
         if (settings.excludes(terrain.worldName(), (terrain.chunkX() << 4) + x, (terrain.chunkZ() << 4) + z,
                 terrain.spawnX(), terrain.spawnZ())) return Rejection.EXCLUDED;
@@ -121,7 +115,9 @@ public final class RetroGenerationEngine {
         if (!terrain.unclaimed(x, y, z) || !terrain.unclaimed(x, y - 1, z)) return Rejection.PROTECTED;
         for (int dx = -MARGIN; dx <= MARGIN; dx++) {
             for (int dz = -MARGIN; dz <= MARGIN; dz++) {
+                if (!terrain.readable(x + dx, z + dz)) return Rejection.HEIGHT;
                 for (int dy = -2; dy <= 3; dy++) {
+                    if (terrain.freshPlant(x + dx, y + dy, z + dz)) continue;
                     Material type = terrain.type(x + dx, y + dy, z + dz);
                     if (!natural(type) || terrain.custom(x + dx, y + dy, z + dz)) return Rejection.BUILDING;
                 }

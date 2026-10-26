@@ -20,6 +20,9 @@ class RetroGenerationRuleTest {
             assertTrue(rules.stream().noneMatch(rule -> rule.id().contains("rice")));
             var onions = rules.stream().filter(rule -> rule.id().endsWith(":wild_onions")).findFirst().orElseThrow();
             assertEquals(120, onions.rarity());
+            assertEquals(64, onions.patch().tries());
+            assertEquals(6, onions.patch().horizontalSpread());
+            assertEquals(3, onions.patch().verticalSpread());
             assertTrue(onions.biomes().contains("minecraft:plains"));
             assertTrue(onions.soils().contains(Material.GRASS_BLOCK));
             var cabbage = rules.stream().filter(rule -> rule.id().endsWith(":wild_cabbages")).findFirst().orElseThrow();
@@ -63,6 +66,24 @@ class RetroGenerationRuleTest {
                 + (filters.isEmpty() ? "" : filters.indent(4))
                 + "    feature:\n      type: minecraft:simple_block\n      to_place:\n        type: minecraft:simple\n        state: {id: farmersdelight:wild_onions}\n"
                 + "    placement:\n    - {type: minecraft:rarity_filter, chance: 120}\n"
-                + "    - type: minecraft:block_predicate_filter\n      predicate:\n" + predicate.indent(8);
+                + "    - {type: minecraft:in_square}\n"
+                + "    - {type: minecraft:heightmap, heightmap: MOTION_BLOCKING}\n"
+                + "    - {type: minecraft:count, count: 64}\n"
+                + "    - type: minecraft:offset\n"
+                + "      x: {type: minecraft:trapezoid, min: -6, max: 6, plateau: 0}\n"
+                + "      y: {type: minecraft:trapezoid, min: -3, max: 3, plateau: 0}\n"
+                + "      z: {type: minecraft:trapezoid, min: -6, max: 6, plateau: 0}\n"
+                + "    - type: minecraft:block_predicate_filter\n      predicate:\n" + predicate.indent(8)
+                + "    - {type: minecraft:biome}\n";
+    }
+
+    @Test void usesConfiguredCountAndOffsetsAndRefusesUnsupportedPlacementOrder() {
+        String yaml = document("", "");
+        assertEquals(64, RetroGenerationRule.parse(new Yaml().load(yaml), "26.3").getFirst().patch().tries());
+        yaml = yaml.replace("count: 64", "count: 128");
+        assertEquals(128, RetroGenerationRule.parse(new Yaml().load(yaml), "26.3").getFirst().patch().tries());
+        assertTrue(RetroGenerationRule.parse(new Yaml().load(yaml.replace("count: 128", "count: 10000")), "26.3").isEmpty());
+        assertTrue(RetroGenerationRule.parse(new Yaml().load(yaml.replace("plateau: 0", "plateau: 2")), "26.3").isEmpty());
+        assertTrue(RetroGenerationRule.parse(new Yaml().load(yaml.replace("heightmap: MOTION_BLOCKING", "heightmap: OCEAN_FLOOR")), "26.3").isEmpty());
     }
 }

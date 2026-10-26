@@ -1,5 +1,13 @@
 # Folia 26.3 构建与发布
 
+## 1.0.3-folia26.3.4：沿用原生植物簇分布
+
+- Folia 26.3 补生成使用 CE 已加载的原生稀有度、落点、高度图、次数和偏移步骤，保留默认 64 次的植物簇形状。
+- 移除最多 3 株和株间距限制；同一轮新增植物允许相邻。旧的两项次数/上限配置由配置更新器备份后移除。
+- 保留空气、地面、群系、建筑、领地及容器保护。只在当前区块写入，周边只读检查要求区块已加载且属于当前 Folia 区域。
+- 沿用所有 `.2` / `.3` 完成标记；更新不会重跑已处理区块，采集后也不补回。
+- 与普通生成保持相同概率时，使用 `density-multiplier: 1.0`；不会修改 CE 的新区块生成概率。
+
 ## 1.0.3-folia26.3.3：查询实际植物与生成诊断
 
 - 新增 `/fd retrogen locate`：只读查找已加载区块的实际野生植物坐标，最多列出最近 10 个。
@@ -21,7 +29,7 @@
 - 自动迁移旧版默认野生植物配置；先备份、原子写入，保留注释、版本键与自定义设置。
 - 已在独立 Folia 26.3 build 5 alpha、Java 25 环境验证正常关服重启、容器内容与作物生成。
 
-使用 `farmersdelight-1.0.3-folia26.3.3.jar`，配套安装
+使用 `farmersdelight-1.0.3-folia26.3.4.jar`，配套安装
 [CraftEngine 26.9.2-folia26.3.1](https://github.com/SWUST-Minecraft-Club/craft-engine/releases/tag/v26.9.2-folia26.3.1)
 中的 `craft-engine-paper-plugin` JAR。尚未安装该 CE 修复版时，两边都需要更新。
 上述验证针对正常关服；本次修复不能恢复更新前已经丢失的数据。
@@ -62,9 +70,9 @@ Folia 26.3 发布构建使用 JDK 25，插件字节码仍以 Java 21 为目标�
 tag 必须精确匹配 `build.gradle.kts` 中的版本：
 
 ```bash
-git tag -a v1.0.3-folia26.3.3 -m "Locate existing wild plants and explain generation diagnostics"
+git tag -a v1.0.3-folia26.3.4 -m "Use native wild plant patch placements for once-only backfill"
 git push origin main
-git push origin v1.0.3-folia26.3.3
+git push origin v1.0.3-folia26.3.4
 ```
 
 发布使用仓库自带的 `GITHUB_TOKEN`，无需额外 token；只有发布 job 申请 `contents: write`。

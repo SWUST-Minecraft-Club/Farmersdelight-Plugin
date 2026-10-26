@@ -190,8 +190,6 @@ retro-generation:
   # Empty = only the server's primary world. Otherwise list exact world names. NORMAL environment only.
   worlds: []
   chunks-per-tick: 1
-  attempts-per-plant: 32
-  max-plants-per-chunk: 3
   # 1.0 follows each plant's rarity_filter from the active CE wild_plants.yml / wild_roots.yml.
   # Higher = more frequent old-chunk patches. Does not change CE's normal new-chunk generation.
   density-multiplier: 1.0

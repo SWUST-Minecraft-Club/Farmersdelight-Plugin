@@ -103,7 +103,9 @@ class ConfigBootstrapEquivalenceTest {
             migrations[i] = new String[]{rename.oldPath(), rename.newPath()};
         }
         assertArrayEquals(LEGACY_MIGRATIONS, migrations, "migration table drifted");
-        assertEquals(LEGACY_RETIRED, policy.retiredKeys(), "retired key table drifted");
+        var retired = new java.util.ArrayList<>(LEGACY_RETIRED);
+        retired.addAll(List.of("retro-generation.attempts-per-plant", "retro-generation.max-plants-per-chunk"));
+        assertEquals(retired, policy.retiredKeys(), "retired key table drifted");
         assertEquals(LEGACY_REGISTRY_SECTIONS, policy.registrySections(), "registry section table drifted");
     }
 

@@ -9,7 +9,7 @@ import java.util.Set;
 
 /** Immutable settings shared by the global dispatcher and the chunk's owning region. */
 public record RetroGenerationSettings(boolean enabled, Set<String> worlds, int chunksPerTick,
-                                      int attemptsPerPlant, int maxPlantsPerChunk, double densityMultiplier,
+                                      double densityMultiplier,
                                       long seed, int spawnExclusionRadius, List<ExcludedArea> excludedAreas,
                                       Set<String> extraProtectionPlugins) {
     public static RetroGenerationSettings load(ConfigurationSection config, String primaryWorld) {
@@ -46,8 +46,7 @@ public record RetroGenerationSettings(boolean enabled, Set<String> worlds, int c
         }
         return new RetroGenerationSettings((Boolean) enabled, worlds,
                 bounded(config, root + "chunks-per-tick", 1, 1, 4),
-                bounded(config, root + "attempts-per-plant", 32, 1, 64),
-                bounded(config, root + "max-plants-per-chunk", 3, 1, 8), density,
+                density,
                 ((Number) seed).longValue(),
                 bounded(config, root + "exclude-spawn-radius", 128, 0, 30_000_000), List.copyOf(excluded),
                 Set.copyOf(stringList(config, root + "extra-protection-plugins")));
