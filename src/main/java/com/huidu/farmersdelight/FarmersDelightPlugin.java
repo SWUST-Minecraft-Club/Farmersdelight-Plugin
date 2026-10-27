@@ -39,6 +39,7 @@ import com.huidu.farmersdelight.config.PluginConfigFiles;
 import com.huidu.farmersdelight.config.DebugSettings;
 import com.huidu.farmersdelight.config.KnifeSettings;
 import com.huidu.farmersdelight.compat.AuraSkillsHook;
+import com.huidu.farmersdelight.compat.HandbookHook;
 import com.huidu.farmersdelight.compat.LevelerExperienceRewards;
 import com.huidu.farmersdelight.gui.CookingPotGui;
 import com.huidu.farmersdelight.gui.GuiCacheInvalidator;
@@ -190,6 +191,7 @@ public class FarmersDelightPlugin extends JavaPlugin implements Listener {
     private volatile KnifeSettings knifeSettings = new KnifeSettings(Set.of(), Set.of());
     private volatile DebugSettings debugSettings = new DebugSettings(false, Set.of());
     private RetroGenerationService retroGeneration;
+    private HandbookHook handbook;
 
     public RetroGenerationService retroGeneration() {
         return retroGeneration;
@@ -428,6 +430,9 @@ public class FarmersDelightPlugin extends JavaPlugin implements Listener {
         retroGeneration = new RetroGenerationService(this);
         retroGeneration.start();
 
+        handbook = new HandbookHook(this);
+        handbook.start();
+
         // PlaceholderAPI bridge — registers iff PAPI is loaded so HUD plugins (BetterHud, MythicHud,
         // etc.) can read every CustomBuffRegistry entry per player. Soft-dep, no-op when absent.
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
@@ -489,6 +494,10 @@ public class FarmersDelightPlugin extends JavaPlugin implements Listener {
         // Order inside ListenerRegistry#stop: event delivery is detached before any listener state is torn
         // down, then the listeners' own tasks stop, then the world/chunk handlers detach.
         runDisableStep("plugin.disable_step_unregister_listeners", listeners::stop);
+        if (handbook != null) {
+            handbook.close();
+            handbook = null;
+        }
 
         // bStats keeps a task of its own; its reports are useless once the plugin is going away, and
         // shutting it down here is what stops it from holding a reference to a disabled plugin instance.
@@ -909,6 +918,9 @@ public class FarmersDelightPlugin extends JavaPlugin implements Listener {
         }
         if (previousAdvancementsEnabled != advancementSystem.isEnabled()) {
             refreshAdvancementSystem(true);
+        }
+        if (handbook != null) {
+            handbook.reload();
         }
         long listenersNanos = System.nanoTime() - phase;
 

@@ -41,6 +41,10 @@ dependencies:
       load: BEFORE
       required: false
       join-classpath: true
+    HandbookCore:
+      load: BEFORE
+      required: false
+      join-classpath: true
     # Declared in the dependency graph on purpose: MMOItems resolves over the class loader only when it is a
     # (transitive) dependency, and the item-id bridge looks its classes up reflectively.
     MMOItems:

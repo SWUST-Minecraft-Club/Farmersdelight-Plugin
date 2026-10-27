@@ -48,7 +48,7 @@ Expanded Delight 仍在移植，不属于已发布附属。
 
 ## 文档
 
-游戏内阅读可安装 [HandbookCore 农夫乐事玩家手册](docs/handbook/README.md)：含入门路线、种植、厨具、料理和常见问题，提供物品预览、章节跳转和配方入口。
+安装 HandbookCore 后，FarmersDelight 会自动加入 [农夫乐事玩家手册](docs/handbook/README.md)：16 篇文章涵盖入门路线、种植、厨具、料理和常见问题，提供物品预览、章节跳转和配方入口。更新本插件并重启即可使用。
 
 完整的玩家指南、服主指南、附属指南和 API 文档已迁移到 [FarmersdelightPluginWiKi](https://github.com/IOVEYOUMC0/FarmersdelightPluginWiKi)，该仓库可以通过 GitHub 集成连接到 GitBook。
 

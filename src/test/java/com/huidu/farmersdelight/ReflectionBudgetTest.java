@@ -44,6 +44,9 @@ class ReflectionBudgetTest {
             // Optional claim APIs, cached per protection-plugin lifecycle; never a player/OP bypass check.
             Map.entry("com/huidu/farmersdelight/worldgen/RetroGenerationProtection.java", 21),
             Map.entry("com/huidu/farmersdelight/compat/AuraSkillsHook.java", 14),
+            // Optional Java 25 HandbookCore API; cached per service lifecycle, outside our Java 21 compile classpath.
+            Map.entry("com/huidu/farmersdelight/compat/HandbookHook.java", 3),
+            Map.entry("com/huidu/farmersdelight/compat/HandbookContent.java", 3),
             // NMS and the CraftEngine proxy: present at runtime, absent from the compile classpath.
             Map.entry("com/huidu/farmersdelight/api/util/DatapackSupport.java", 5),
             Map.entry("com/huidu/farmersdelight/recipe/RecipeItemCodec.java", 5),

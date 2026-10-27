@@ -162,6 +162,7 @@ jobs:
           mkdir -p dist
           cp "build/libs/farmersdelight-${VERSION}.jar" dist/
           cp docs/RELEASING.md docs/RETRO_GENERATION.md dist/
+          cp docs/handbook/README.md dist/HANDBOOK.md
           cd dist
           sha256sum ./*.jar > SHA256SUMS.txt
 
@@ -218,9 +219,9 @@ jobs:
         run: |
           sha256sum --check SHA256SUMS.txt
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" ./*.jar SHA256SUMS.txt RELEASING.md RETRO_GENERATION.md --clobber
+            gh release upload "$TAG" ./*.jar SHA256SUMS.txt RELEASING.md RETRO_GENERATION.md HANDBOOK.md --clobber
           else
-            gh release create "$TAG" ./*.jar SHA256SUMS.txt RELEASING.md RETRO_GENERATION.md \
+            gh release create "$TAG" ./*.jar SHA256SUMS.txt RELEASING.md RETRO_GENERATION.md HANDBOOK.md \
               --verify-tag --title "FarmersDelight $TAG" --generate-notes \
-              --notes 'Folia 26.3 适配版：旧区块补生成沿用 CE 原生植物簇的稀有度、落点、高度图、64 次尝试及扩散偏移，移除最多 3 株和株间距限制。保留空气、建筑、领地及容器保护，沿用所有旧版完成标记，重启或采集后不重复补种；已处理区块不会重跑。密度 1.0 使用普通生成概率。包含植物坐标查询与此前容器保存修复。配套 CraftEngine 26.9.2-folia26.3.1 的 Paper 插件版本。用法与实测边界见附件 RETRO_GENERATION.md。'
+              --notes 'Folia 26.3 适配版：内置 16 篇农夫乐事玩家指南，已安装 HandbookCore 的服务器更新本插件并正常重启后，农夫乐事分类会自动加入手册。支持章节跳转、物品预览和玩家配方入口；重载会替换贡献，核心服务恢复后自动重新连接，未安装核心时正常运行。用法与旧 YAML 切换方式见附件 HANDBOOK.md。保留原生植物簇补生成、一次性区块标记、植物坐标查询与容器保存修复；配套 CraftEngine 26.9.2-folia26.3.1 的 Paper 插件版本。'
           fi

@@ -14,7 +14,7 @@ from check_duplicate_yaml_keys import compose_file, find_duplicates
 
 ROOT = Path(__file__).resolve().parent.parent
 CONTENT = ROOT / "docs/handbook/content/farmersdelight.yml"
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 ID = re.compile(r"farmersdelight:[a-z0-9_./-]+\Z")
 
 

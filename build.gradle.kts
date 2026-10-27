@@ -12,7 +12,7 @@ plugins {
 }
 
 group = "com.huidu.farmersdelight"
-version = "1.0.3-folia26.3.4"
+version = "1.0.3-folia26.3.5"
 
 repositories {
     mavenCentral()
@@ -186,6 +186,9 @@ tasks.test {
 }
 
 tasks.processResources {
+    from("docs/handbook/content") {
+        into("handbook")
+    }
     inputs.property("pluginVersion", project.version.toString())
     filteringCharset = "UTF-8"
     filesMatching("paper-plugin.yml") {

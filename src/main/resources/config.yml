@@ -11,6 +11,11 @@ config-version: 1
 # Affects plugin logs, console text and text with no player context; player GUI/messages still prefer the player client language.
 language: ''
 
+# Automatically publish the bundled player guide when HandbookCore is available.
+# /fd reload refreshes the contribution. Disable this when maintaining a separate YAML guide.
+handbook:
+  enabled: true
+
 # Paper loads registry packs from plugins/FarmersDelight/datapacks before worlds start.
 # Tags, enchantments and damage types are server-wide. CraftEngine items keep their tags in CE configs.
 datapacks:

@@ -1,6 +1,6 @@
-# 农夫乐事玩家手册 1.0.0
-# HandbookCore Beta_0_1_0；内容基线 FarmersDelight 1.0.3-folia26.3.4。
-# 放到 plugins/HandbookCore/content/ 后执行 /handbook reload。
+# 农夫乐事玩家手册 1.0.1
+# HandbookCore Beta_0_1_0 / Beta_0_1_1；内容基线 FarmersDelight 1.0.3-folia26.3.5。
+# 随 FarmersDelight 自动注册；单独使用此 YAML 时关闭 handbook.enabled，避免 ID 重复。
 categories:
   - id: farmersdelight:guide
     title: 农夫乐事

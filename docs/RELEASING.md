@@ -1,5 +1,12 @@
 # Folia 26.3 构建与发布
 
+## 1.0.3-folia26.3.5：玩家手册自动加入 HandbookCore
+
+- 内置 16 篇农夫乐事玩家指南，检测到 HandbookCore 后通过公开 API 自动注册，正常更新插件并重启即可阅读。
+- `/fd reload` 刷新贡献，核心服务恢复后自动重新连接；停用或关闭 `handbook.enabled` 时注销。
+- HandbookCore 为可选依赖，未安装时不影响玩法。正文与独立 YAML 使用同一内容源，保留章节跳转、物品预览与玩家配方入口。
+- 单独维护过同 ID YAML 的服务器可继续使用手动内容；切换方式见[手册说明](https://github.com/SWUST-Minecraft-Club/Farmersdelight-Plugin/blob/main/docs/handbook/README.md)。
+
 ## 1.0.3-folia26.3.4：沿用原生植物簇分布
 
 - Folia 26.3 补生成使用 CE 已加载的原生稀有度、落点、高度图、次数和偏移步骤，保留默认 64 次的植物簇形状。
@@ -29,7 +36,7 @@
 - 自动迁移旧版默认野生植物配置；先备份、原子写入，保留注释、版本键与自定义设置。
 - 已在独立 Folia 26.3 build 5 alpha、Java 25 环境验证正常关服重启、容器内容与作物生成。
 
-使用 `farmersdelight-1.0.3-folia26.3.4.jar`，配套安装
+使用 `farmersdelight-1.0.3-folia26.3.5.jar`，配套安装
 [CraftEngine 26.9.2-folia26.3.1](https://github.com/SWUST-Minecraft-Club/craft-engine/releases/tag/v26.9.2-folia26.3.1)
 中的 `craft-engine-paper-plugin` JAR。尚未安装该 CE 修复版时，两边都需要更新。
 上述验证针对正常关服；本次修复不能恢复更新前已经丢失的数据。
@@ -70,9 +77,9 @@ Folia 26.3 发布构建使用 JDK 25，插件字节码仍以 Java 21 为目标�
 tag 必须精确匹配 `build.gradle.kts` 中的版本：
 
 ```bash
-git tag -a v1.0.3-folia26.3.4 -m "Use native wild plant patch placements for once-only backfill"
+git tag -a v1.0.3-folia26.3.5 -m "Automatically register the FarmersDelight player handbook"
 git push origin main
-git push origin v1.0.3-folia26.3.4
+git push origin v1.0.3-folia26.3.5
 ```
 
 发布使用仓库自带的 `GITHUB_TOKEN`，无需额外 token；只有发布 job 申请 `contents: write`。

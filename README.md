@@ -49,6 +49,8 @@ protection support, limitations and the read-only `/fd retrogen preview` command
 
 ## Documentation
 
+When HandbookCore is installed, FarmersDelight automatically publishes its [16-article player guide](docs/handbook/README.md), including item previews, chapter links and recipe buttons. Update this plugin and restart to enable it.
+
 The complete player, server, addon and API documentation is maintained in the [FarmersdelightPluginWiKi](https://github.com/IOVEYOUMC0/FarmersdelightPluginWiKi) repository. It can be connected to GitBook through its GitHub integration.
 
 Drink food defaults and cider duration were checked in a local verification round; those records are kept outside this repository. Existing CE files require merging; numeric checks do not prove equivalence of all effects or gameplay.
