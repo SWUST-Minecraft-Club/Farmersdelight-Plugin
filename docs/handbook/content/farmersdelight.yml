@@ -1,0 +1,502 @@
+# 农夫乐事玩家手册 1.0.0
+# HandbookCore Beta_0_1_0；内容基线 FarmersDelight 1.0.3-folia26.3.4。
+# 放到 plugins/HandbookCore/content/ 后执行 /handbook reload。
+categories:
+  - id: farmersdelight:guide
+    title: 农夫乐事
+    description: 种一畦菜，做一桌饭
+    icon: BEETROOT_SOUP
+    order: 30
+    permission: ''
+
+entries:
+  - id: farmersdelight:welcome
+    category: farmersdelight:guide
+    title: 把日子过成农夫乐事
+    summary: 从一把小刀，到你自己的田园厨房
+    keywords: [农夫乐事, 农场物语, 介绍, 新手, 入门, 厨房]
+    order: 0
+    permission: ''
+    pages:
+      - title: 你的田园厨房
+        blocks:
+          - '带回一颗种子，种下一畦菜，再把收成端上餐桌。'
+          - '农夫乐事让种植、备料和下厨连成一段生活。'
+          - type: item
+            ce-item: farmersdelight:cooking_pot
+            material: CAULDRON
+            caption: 看看你的第一口炖锅
+      - title: 想从哪里开始
+        blocks:
+          - '喜欢种田？先找野菜。想吃热饭？先搭厨房。'
+          - '点击物品可预览外观与说明。'
+          - '点击配方入口可打开配方书。'
+          - type: link
+            label: 跟着做：第一天
+            entry: farmersdelight:first_day
+          - type: command
+            label: 打开料理与砧板配方
+            command: fd recipe
+
+  - id: farmersdelight:first_day
+    category: farmersdelight:guide
+    title: 第一天，先做这几件事
+    summary: 准备工具、留种、搭起小厨房
+    keywords: [新手, 起步, 第一天, 开始, 路线, 燧石]
+    order: 10
+    permission: ''
+    pages:
+      - title: 一把刀，一块板
+        blocks:
+          - '<#79521e>① 做一把燧石小刀</#79521e>'
+          - '合成格里，上放燧石，下放木棍。'
+          - '<#79521e>② 做一块砧板</#79521e>'
+          - '准备两根木棍、四块木板，按砧板篇的图案摆放。'
+          - type: link
+            label: 小刀与稻草
+            entry: farmersdelight:knife
+      - title: 把第一份收成留住
+        blocks:
+          - '<#79521e>③ 去野外找种子</#79521e>'
+          - '带回番茄种子、卷心菜种子或洋葱，先留一部分种下。'
+          - '<#79521e>④ 在家开一小块田</#79521e>'
+          - '用锄头耕地，附近留水，给作物充足光照。'
+          - type: link
+            label: 去哪找野生食材
+            entry: farmersdelight:foraging
+      - title: 今天就能吃热饭
+        blocks:
+          - '<#79521e>⑤ 点起营火，架上炖锅</#79521e>'
+          - '生牛肉、胡萝卜和马铃薯就能做牛肉炖菜。'
+          - '准备一个碗，等锅里的料理熟透。'
+          - type: link
+            label: 做出第一碗炖菜
+            entry: farmersdelight:first_meal
+      - title: 之后慢慢扩建
+        blocks:
+          - '先有稳定的菜地，再添炉灶、煎锅和橱柜。'
+          - '用稻草做绳索，给番茄搭架。'
+          - '再用有机堆肥改善土壤。'
+          - type: link
+            label: 给农田升级
+            entry: farmersdelight:soil
+          - type: link
+            label: 收成放在哪里
+            entry: farmersdelight:storage
+
+  - id: farmersdelight:foraging
+    category: farmersdelight:guide
+    title: 去哪找野生食材
+    summary: 平原找洋葱，沙滩找卷心菜，浅水找稻米
+    keywords: [野菜, 野生植物, 种子, 探索, 群系, 洋葱, 卷心菜, 番茄, 找不到]
+    order: 20
+    permission: ''
+    pages:
+      - title: 沿着地形去找
+        blocks:
+          - '洋葱：平原、森林、草甸等。'
+          - '卷心菜、甜菜：沙滩与积雪沙滩。'
+          - '番茄：沙漠、丛林、热带草原等。'
+          - '稻米：河流、沼泽、丛林的浅水。'
+      - title: 把种子带回家
+        blocks:
+          - '徒手采野生番茄和卷心菜，可获得对应种子；洋葱本身就能种。'
+          - '剪刀采下的是野生植株。想加工出种子，可把它放上砧板，再用小刀处理。'
+          - type: link
+            label: 砧板怎么用
+            entry: farmersdelight:cutting_board
+      - title: 顺路带些老朋友
+        blocks:
+          - '野生胡萝卜常见于平原、森林等地；野生马铃薯偏好针叶林和风袭山地。'
+          - '胡萝卜、马铃薯可留作种苗。'
+          - '海边沙地还有灌木，用小刀采集有机会得到稻草。'
+      - title: 找不到时
+        blocks:
+          - '植物按地形和概率成簇出现，走过几块地没找到很正常。'
+          - '继续探索合适的自然地表，避开已被采空的地方。'
+          - '野菜采走后不会定时补回。带回种苗，建立自己的菜园。'
+
+  - id: farmersdelight:planting
+    category: farmersdelight:guide
+    title: 开垦你的第一畦菜
+    summary: 番茄、卷心菜和洋葱的种植与收获
+    keywords: [种田, 种植, 耕地, 光照, 水, 卷心菜, 洋葱, 骨粉, 留种]
+    order: 30
+    permission: ''
+    pages:
+      - title: 先准备一块好地
+        blocks:
+          - '用锄头把泥土或草方块翻成耕地，附近留水，保持明亮。'
+          - '番茄、卷心菜和洋葱需要足够光照；火把也能照亮菜地。'
+          - '普通耕地就能起步，之后再升级成沃土耕地。'
+      - title: 种下与收获
+        blocks:
+          - '番茄：种番茄种子，长成果丛后右键采成熟果实。'
+          - '卷心菜：种卷心菜种子，成熟后收获菜和种子。'
+          - '洋葱：直接种洋葱，成熟后收获并留下一部分再种。'
+          - type: link
+            label: 番茄还能搭架
+            entry: farmersdelight:tomatoes
+      - title: 小刀帮你收割
+        blocks:
+          - '成熟的小麦、甜菜、胡萝卜、马铃薯、卷心菜和洋葱，可用小刀左键收割并原地补种。'
+          - '未熟的先留着；需要清理时，换工具或潜行破坏。'
+          - '稻米和番茄的收获方式另看专篇。'
+      - title: 菜怎么没长大
+        blocks:
+          - '检查土壤、光照与上方空间，再耐心等候。'
+          - '骨粉可帮助卷心菜、洋葱和成熟阶段的番茄丛生长。'
+          - '番茄幼苗要先自然长成果丛。不要急着把它拔掉。'
+
+  - id: farmersdelight:tomatoes
+    category: farmersdelight:guide
+    title: 番茄与爬藤支架
+    summary: 反复采果，让番茄顺绳往上长
+    keywords: [番茄, 番茄种子, 幼苗, 果丛, 绳索, 支架, 攀爬, 右键]
+    order: 40
+    permission: ''
+    pages:
+      - title: 等它长成果丛
+        blocks:
+          - '种下番茄种子，等幼苗自然长大，变成番茄丛。'
+          - '果实成熟后右键采收，留下植株，之后还能继续结果。'
+          - type: item
+            ce-item: farmersdelight:tomato
+            material: APPLE
+            caption: 看看成熟的番茄
+      - title: 给它一根绳索
+        blocks:
+          - '将两份稻草上下摆放，可合成四根绳索。'
+          - '在番茄丛正上方接好绳索，留下向上生长的空间。'
+          - '藤蔓会沿绳生长，成熟的悬挂番茄也能右键采果。'
+          - type: link
+            label: 稻草从哪里来
+            entry: farmersdelight:knife
+
+  - id: farmersdelight:rice
+    category: farmersdelight:guide
+    title: 在浅水边种稻米
+    summary: 准备一格深的静水，收割成熟的上半截
+    keywords: [水稻, 稻米, 稻穗, 水田, 静水, 种不下, 稻草]
+    order: 50
+    permission: ''
+    pages:
+      - title: 先挖一小块水田
+        blocks:
+          - '铺泥土作底，灌入一格深的静水，让水面上方留空。'
+          - '拿稻米或稻穗种进水里。只在泥土旁放水，还不够。'
+          - '水流和深水不适合起步；用水桶把水田补成静水。'
+      - title: 割上面，留下根
+        blocks:
+          - '稻秆长出上半截稻穗后，继续等它成熟。'
+          - '用小刀收割成熟的上半截，可获得稻米和稻草；留下下半截继续生长。'
+          - type: item
+            ce-item: farmersdelight:rice
+            material: WHEAT_SEEDS
+            caption: 稻米也能用来种植
+      - title: 稻穗也有用
+        blocks:
+          - '稻穗可以直接合成稻米。'
+          - '放上砧板用小刀切，还能得到稻草。'
+          - '稻米能做饭，稻草能做绳索、帆布和堆肥。'
+          - type: link
+            label: 学会使用砧板
+            entry: farmersdelight:cutting_board
+      - title: 留一点作种
+        blocks:
+          - '第一批收成别全下锅。留些稻米扩种，再收集稻草。'
+          - '水田保持光照，上方留出稻穗生长空间。'
+          - type: link
+            label: 回到种植指引
+            entry: farmersdelight:planting
+
+  - id: farmersdelight:knife
+    category: farmersdelight:guide
+    title: 一把小刀能做什么
+    summary: 备料、收割、取稻草，从燧石小刀开始
+    keywords: [小刀, 燧石, 木棍, 工具, 收割, 稻草, 绳索, 帆布]
+    order: 60
+    permission: ''
+    pages:
+      - title: 你的第一件厨具
+        blocks:
+          - '燧石在上，木棍在下，合成燧石小刀。'
+          - '它能处理砧板上的食材，也能收割成熟作物。之后可换铁、金、钻石或下界合金小刀。'
+          - type: item
+            ce-item: farmersdelight:flint_knife
+            material: FLINT
+            caption: 预览燧石小刀
+      - title: 收集第一把稻草
+        blocks:
+          - '用小刀割草有机会得到稻草；收割成熟小麦或成熟稻穗也能收集。'
+          - '两份稻草合成绳索，四份可做帆布。'
+          - '小刀会耗耐久，出门前检查。'
+          - type: link
+            label: 用绳索种番茄
+            entry: farmersdelight:tomatoes
+
+  - id: farmersdelight:cutting_board
+    category: farmersdelight:guide
+    title: 砧板：把食材变成料理
+    summary: 放上食材、换对工具、右键加工
+    keywords: [砧板, 切菜板, 切割, 工具, 南瓜, 肉, 取回, 木板]
+    order: 70
+    permission: ''
+    pages:
+      - title: 两棍四板做砧板
+        blocks:
+          - '工作台里摆两行相同的材料：'
+          - '<#79521e>木棍·木板·木板</#79521e>'
+          - '<#79521e>木棍·木板·木板</#79521e>'
+          - type: item
+            ce-item: farmersdelight:cutting_board
+            material: OAK_PRESSURE_PLATE
+            caption: 预览砧板
+      - title: 先放，再切
+        blocks:
+          - '① 手持食材右键放上砧板。'
+          - '② 换成配方要求的工具，再右键加工。'
+          - '③ 拾起弹出的产物。'
+          - '放错了？空手右键可取回。'
+      - title: 从切南瓜练习
+        blocks:
+          - '放一个南瓜，用小刀右键，默认能切出四片南瓜片。'
+          - '肉、鱼和野生植物也有切割配方；部分材料需要斧、剪刀等工具。'
+          - type: command
+            label: 查看当前切割配方
+            command: fd recipe
+      - title: 切不动时
+        blocks:
+          - '先确认板上有食材，再检查配方要求的工具。'
+          - '工具错误和没有配方，会给出不同提示。'
+          - '照配方书选用正确工具。'
+
+  - id: farmersdelight:cooking_pot
+    category: farmersdelight:guide
+    title: 炖锅：让厨房飘起香气
+    summary: 点燃热源、放入食材、用容器盛出料理
+    keywords: [炖锅, 厨锅, 烹饪锅, 汤, 食材, 热源, 容器, 碗, 不加热]
+    order: 80
+    permission: ''
+    pages:
+      - title: 先架起一口锅
+        blocks:
+          - '铁锭五个，红砖物品两个。'
+          - '再加一把木铲和一个水桶。'
+          - '工作台摆法：砖·铲·砖／铁·水·铁／铁·铁·铁。'
+          - '把锅放在点燃的营火或炉灶正上方。'
+      - title: 锅里该放什么
+        blocks:
+          - '右键打开锅，把配方食材放进食材格。'
+          - '多放不属于这道菜的食材，可能无法匹配配方。'
+          - '确认热源点燃，等烹饪完成。'
+          - type: command
+            label: 打开料理配方
+            command: fd recipe
+      - title: 别忘了带碗
+        blocks:
+          - '汤和炖菜通常需要碗。把碗放进容器格，取出盛好的成品。'
+          - '也可以手持碗右键有成品的炖锅，直接盛走一份。'
+          - '其他料理可能需要瓶等容器，以当前配方为准。'
+      - title: 第一餐从这里开始
+        blocks:
+          - '锅里没动静？检查火有没有点燃、食材是否匹配，以及成品是否已经装满。'
+          - '成品盛不出来？再检查容器。'
+          - type: link
+            label: 一步步做牛肉炖菜
+            entry: farmersdelight:first_meal
+
+  - id: farmersdelight:first_meal
+    category: farmersdelight:guide
+    title: 做出第一碗牛肉炖菜
+    summary: 一份生牛肉、一根胡萝卜、一颗马铃薯
+    keywords: [第一餐, 牛肉炖菜, 炖牛肉, 新手配方, 做饭, 热饭]
+    order: 90
+    permission: ''
+    pages:
+      - title: 今天的采购清单
+        blocks:
+          - '生牛肉、胡萝卜、马铃薯各备一份，再带一个碗。'
+          - '准备炖锅和点燃的营火；已有炉灶也可以用。'
+          - '这道菜用原版食材就能做。'
+          - type: link
+            label: 炖锅怎么搭
+            entry: farmersdelight:cooking_pot
+      - title: 把晚饭端上桌
+        blocks:
+          - '把三份食材放进锅里，保持加热，等炖菜做好。'
+          - '用碗盛出，趁饥饿时享用。想换口味，再翻配方书。'
+          - type: item
+            ce-item: farmersdelight:beef_stew
+            material: RABBIT_STEW
+            caption: 预览牛肉炖菜
+          - type: command
+            label: 查看更多料理
+            command: fd recipe
+
+  - id: farmersdelight:stove_skillet
+    category: farmersdelight:guide
+    title: 炉灶与煎锅
+    summary: 添一个烤面，再带口煎锅去露营
+    keywords: [炉灶, 煎锅, 营火, 生肉, 烤鱼, 放置, 潜行, 手持, 露营]
+    order: 100
+    permission: ''
+    pages:
+      - title: 炉灶就是厨房的火
+        blocks:
+          - '点燃的炉灶能给上方的炖锅或煎锅供热，也能直接烤食物。'
+          - '用打火石点燃，用锹熄灭。'
+          - '别踩到点燃的烤面上。'
+          - type: item
+            ce-item: farmersdelight:stove
+            material: CAMPFIRE
+            caption: 预览炉灶
+      - title: 放下煎锅煎食物
+        blocks:
+          - '手持煎锅，潜行右键放在热源上方。'
+          - '拿生肉、生鱼等可用营火烤熟的食物右键下锅。'
+          - '煎好后成品会弹出。空手右键可取回锅内食物。'
+      - title: 手持煎锅去露营
+        blocks:
+          - '一手拿煎锅，另一手拿可煎的食材，靠近点燃的热源，按住右键。'
+          - '完成后熟食进入背包。松手或换物品会中断，没熟的食材仍留着。'
+          - type: item
+            ce-item: farmersdelight:skillet
+            material: IRON_INGOT
+            caption: 预览煎锅
+      - title: 先分清两种下厨
+        blocks:
+          - '炖锅按料理配方做汤和炖菜。'
+          - '煎锅可煎熟能在营火上烤的食物。'
+          - '熄灭的营火和炉灶不能供热。'
+          - type: link
+            label: 回到炖锅指引
+            entry: farmersdelight:cooking_pot
+
+  - id: farmersdelight:soil
+    category: farmersdelight:guide
+    title: 用堆肥养好一块地
+    summary: 有机堆肥熟化成沃土，再翻成沃土耕地
+    keywords: [堆肥, 沃土, 沃土耕地, 农田, 生长, 稻草, 腐肉, 树皮]
+    order: 110
+    permission: ''
+    pages:
+      - title: 从有机堆肥开始
+        blocks:
+          - '一份泥土、两份稻草、两份腐肉、四份骨粉，无序合成有机堆肥。'
+          - '放在露天、近水的地方，等它慢慢熟化为沃土。'
+          - type: item
+            ce-item: farmersdelight:organic_compost
+            material: COMPOSTER
+            caption: 预览有机堆肥
+      - title: 翻成更好的耕地
+        blocks:
+          - '手持锄头，右键上方空着的沃土，翻成沃土耕地。'
+          - '附近留水，保持湿润，它能帮助作物生长。'
+          - '堆肥和作物都需要时间；这是一项长期的田园投资。'
+          - type: link
+            label: 再养一片蘑菇
+            entry: farmersdelight:mushrooms
+
+  - id: farmersdelight:mushrooms
+    category: farmersdelight:guide
+    title: 养一片蘑菇群落
+    summary: 在沃土或堆肥上，留下能反复采收的蘑菇
+    keywords: [蘑菇, 红蘑菇, 棕蘑菇, 群落, 沃土, 堆肥, 剪刀, 采收]
+    order: 120
+    permission: ''
+    pages:
+      - title: 给蘑菇安个家
+        blocks:
+          - '对应的蘑菇方块与小蘑菇，可以合成蘑菇群落。'
+          - '放在沃土或有机堆肥上，等群落逐渐长满。'
+          - '普通蘑菇种在这些土壤上，也有机会长成群落。'
+      - title: 采收而不是拔光
+        blocks:
+          - '用剪刀右键可修下一朵；用小刀右键可一次收取群落中的蘑菇。'
+          - '群落留下后还能继续生长。'
+          - type: item
+            ce-item: farmersdelight:brown_mushroom_colony
+            material: BROWN_MUSHROOM
+            caption: 预览棕蘑菇群落
+
+  - id: farmersdelight:storage
+    category: farmersdelight:guide
+    title: 给收成和厨具安个家
+    summary: 橱柜装东西，板条箱压缩收成，篮子收掉落物
+    keywords: [储物, 收纳, 橱柜, 板条箱, 捆包, 篮子, 帆布, 田园装饰]
+    order: 130
+    permission: ''
+    pages:
+      - title: 先分清柜子和箱子
+        blocks:
+          - '橱柜可以打开，存放食材与厨具。'
+          - '作物板条箱是压缩方块：九份作物合成一箱，再拆回九份。它不是能打开的容器。'
+          - '稻米、稻穗和稻草也能压缩储存。'
+      - title: 篮子与厨房角落
+        blocks:
+          - '篮子能储物，也能收集开口方向附近的掉落物。摆放后先确认朝向。'
+          - '把收成分类放好：种苗留在田边，食材放在灶旁。'
+          - type: link
+            label: 接着做一顿热饭
+            entry: farmersdelight:cooking_pot
+
+  - id: farmersdelight:food
+    category: farmersdelight:guide
+    title: 带一份好饭去冒险
+    summary: 认识料理、营养与容器，准备自己的旅行餐
+    keywords: [食物, 料理, 营养, 舒适, 效果, 饥饿, 饱和度, 牛奶, 冒险]
+    order: 140
+    permission: ''
+    pages:
+      - title: 做饭的回报
+        blocks:
+          - '料理能补充饥饿和饱和度，部分还带有效果。'
+          - '获得“营养”时，持续时间内能帮助你保持饱腹，适合长途探索。'
+          - '看物品说明和屏幕上的效果提示，挑适合自己的饭。'
+      - title: 装好再出门
+        blocks:
+          - '汤和炖菜通常要用碗盛，其他料理可能要瓶等容器。'
+          - '整桶牛奶会清除营养等效果；想保留好饭的收益，喝之前留意。'
+          - type: command
+            label: 为旅途挑一道菜
+            command: fd recipe
+
+  - id: farmersdelight:questions
+    category: farmersdelight:guide
+    title: 遇到问题，翻这一页
+    summary: 菜种不下、锅不加热、砧板不工作时怎么做
+    keywords: [帮助, 问题, 不工作, 种不下, 看不见, 材质, 配方, 没反应]
+    order: 150
+    permission: ''
+    pages:
+      - title: 菜种不下或不长
+        blocks:
+          - '普通菜先检查耕地和光照；稻米要种在一格深的静水里。'
+          - '番茄幼苗先等自然生长，变成果丛后再用骨粉。'
+          - type: link
+            label: 查看水田种植
+            entry: farmersdelight:rice
+          - type: link
+            label: 查看番茄生长
+            entry: farmersdelight:tomatoes
+      - title: 锅和砧板没反应
+        blocks:
+          - '锅：看火是否点燃、食材是否匹配、成品是否已满。盛不出时检查容器。'
+          - '砧板：先放食材，再换配方要求的工具右键。'
+          - type: command
+            label: 打开当前配方核对
+            command: fd recipe
+      - title: 物品外观不对
+        blocks:
+          - '接受服务器发送的资源包，等下载和加载完成。'
+          - '若之前拒绝了，可在服务器列表中调整资源包选项，再重新连接。'
+          - '仍异常时，向服主描述物品名称并提供截图。'
+      - title: 配方与操作以什么为准
+        blocks:
+          - '本章介绍农夫乐事常用玩法。'
+          - '配方和开放功能可能随服务器调整。'
+          - '拿不准时先看游戏内配方书。物品预览只供查看，不会发放物品。'
+          - type: link
+            label: 回到入门介绍
+            entry: farmersdelight:welcome

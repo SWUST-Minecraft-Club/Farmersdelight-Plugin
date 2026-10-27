@@ -48,6 +48,8 @@ Expanded Delight 仍在移植，不属于已发布附属。
 
 ## 文档
 
+游戏内阅读可安装 [HandbookCore 农夫乐事玩家手册](docs/handbook/README.md)：含入门路线、种植、厨具、料理和常见问题，提供物品预览、章节跳转和配方入口。
+
 完整的玩家指南、服主指南、附属指南和 API 文档已迁移到 [FarmersdelightPluginWiKi](https://github.com/IOVEYOUMC0/FarmersdelightPluginWiKi)，该仓库可以通过 GitHub 集成连接到 GitBook。
 
 默认饮品营养与苹果酒时长已在本地验证轮次中核对，记录放在仓库外。已有 CE 文件需合并更新；有害效果、客户端和完整玩法不由数值测试证明。
